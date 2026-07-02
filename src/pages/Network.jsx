@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wifi, Network as NetworkIcon, Router, Mouse as MouseIcon } from "lucide-react";
+import { Wifi, Network as NetworkIcon, Router } from "lucide-react";
 import "../styles/network.css";
 import PageHeader from "../components/PageHeader";
+import NotFoundState from "../components/NotFoundState";
 import { dongleWifiAssetService } from "../services/dongleWifiAssetService";
 import { networkPortAssetService } from "../services/networkPortAssetService";
 import { fortiSwitchAssetService } from "../services/fortiSwitchAssetService";
-import { mswAssetService } from "../services/mswAssetService";
-import { mouseAssetService } from "../services/mouseAssetService";
 
 export default function Network() {
   const navigate = useNavigate();
@@ -16,27 +15,21 @@ export default function Network() {
     donglewifi: 0,
     port: 0,
     fortiswitch: 0,
-    msw: 0,
-    mouse: 0,
   });
 
   useEffect(() => {
     let isMounted = true;
     async function loadCounts() {
-      const [dongle, port, forti, msw, mouse] = await Promise.all([
+      const [dongle, port, forti] = await Promise.all([
         dongleWifiAssetService.list(),
         networkPortAssetService.list(),
         fortiSwitchAssetService.list(),
-        mswAssetService.list(),
-        mouseAssetService.list(),
       ]);
       if (isMounted) {
         setCounts({
           donglewifi: dongle.length,
           port: port.length,
           fortiswitch: forti.length,
-          msw: msw.length,
-          mouse: mouse.length,
         });
       }
     }
@@ -47,36 +40,144 @@ export default function Network() {
   }, []);
 
   const categories = [
-    { key: "donglewifi", label: "Dongle Wi-Fi", icon: Wifi, path: "/network/donglewifi" },
-    { key: "port", label: "Network Port", icon: NetworkIcon, path: "/network/port" },
-    { key: "fortiswitch", label: "FortiSwitch", icon: Router, path: "/network/fortiswitch" },
-    { key: "msw", label: "Mouse Wireless (MSW)", icon: MouseIcon, path: "/network/msw" },
-    { key: "mouse", label: "Mouse", icon: MouseIcon, path: "/network/mouse" },
+    {
+      key: "donglewifi",
+      title: "Dongle Wi-Fi",
+      total: `Total Stock: ${counts.donglewifi} Units`,
+      info1: `In Store: ${counts.donglewifi} Units`,
+      info2: "In Use: 0 Units",
+      icon: Wifi,
+      path: "/network/donglewifi",
+      button: "Manage Dongle Wi-Fi",
+      color: "red",
+    },
+    {
+      key: "port",
+      title: "Network Port",
+      total: `Total Stock: ${counts.port} Units`,
+      info1: `In Store: ${counts.port} Units`,
+      info2: "In Use: 0 Units",
+      icon: NetworkIcon,
+      path: "/network/port",
+      button: "Manage Network Port",
+      color: "yellow",
+    },
+    {
+      key: "fortiswitch",
+      title: "FortiSwitch",
+      total: `Total Stock: ${counts.fortiswitch} Units`,
+      info1: `In Store: ${counts.fortiswitch} Units`,
+      info2: "In Use: 0 Units",
+      icon: Router,
+      path: "/network/fortiswitch",
+      button: "Manage FortiSwitch",
+      color: "blue",
+    },
   ];
+  const keyword = search.toLowerCase();
+  const filteredCards = categories.filter((item) =>
+    item.title.toLowerCase().includes(keyword)
+  );
+
+  const networkData = [
+    {
+      label: "Dongle Wi-Fi",
+      percent: 75,
+    },
+    {
+      label: "Network Port",
+      percent: 60,
+    },
+    {
+      label: "FortiSwitch",
+      percent: 90,
+    },
+  ];
+
+  const filteredNetwork = networkData.filter((item) =>
+    item.label.toLowerCase().includes(keyword)
+  );
+
+  const hasResult =
+    filteredCards.length > 0 ||
+    filteredNetwork.length > 0;
+
+  const getBarColor = (pct) => {
+    if (pct <= 30) return "#E53935";
+    if (pct <= 60) return "#FFD600";
+    return "#32CD32";
+  };
 
   return (
     <>
       <PageHeader search={search} onSearchChange={setSearch} placeholder="Search Network..." />
-
+      {hasResult ? (
+        <>
       <h1 className="dash-title">Network Overview</h1>
 
       <div className="network-overview-grid">
         {categories.map((cat) => {
           const Icon = cat.icon;
           return (
-            <div className="network-card stagger-item" key={cat.key}>
+            <div
+              className={`network-card ${cat.color} stagger-item`}
+              key={cat.key}
+            >
               <div className="network-card-header">
                 <Icon size={26} />
-                <h3>{cat.label}</h3>
+                <h3>{cat.title}</h3>
               </div>
-              <p>{counts[cat.key]} Asset Tercatat</p>
-              <button className="network-btn" onClick={() => navigate(cat.path)}>
-                Manage {cat.label}
+
+              <p>{cat.total}</p>
+              <p>{cat.info1}</p>
+              <p>{cat.info2}</p>
+
+              <button
+                className="network-btn"
+                onClick={() => navigate(cat.path)}
+              >
+                {cat.button}
               </button>
             </div>
           );
         })}
       </div>
+      <section className="section stagger-item">
+        <h2 className="section-title">
+          Network Stock Availability Percentage
+        </h2>
+
+        <div className="bar-list">
+          {networkData.map((item) => (
+            <div className="bar-row" key={item.label}>
+              <p className="bar-label">{item.label}</p>
+
+              <div className="bar-track">
+                <div
+                  className="bar-fill"
+                  style={{
+                    width: `${item.percent}%`,
+                    background: getBarColor(item.percent),
+                  }}
+                />
+              </div>
+
+              <span
+                className="bar-pct"
+                style={{
+                  color: getBarColor(item.percent),
+                }}
+              >
+                {item.percent}%
+              </span>
+            </div>
+          ))}
+        </div>
+    </section>
+      </>
+    ) : (
+      <NotFoundState />
+    )}
     </>
   );
 }

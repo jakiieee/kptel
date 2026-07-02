@@ -1,21 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
-/**
- * AuthContext.jsx
- * ------------------------------------------------------------------
- * Menyimpan data user yang sedang login (nama, email, token) supaya
- * bisa diakses dari mana saja (PageHeader, Sidebar, Admin, dll) tanpa
- * hardcode "Adam / userr123@gmail.com".
- *
- * Saat ini token & user disimpan di localStorage (mode mock). Setelah
- * backend auth tersedia, cukup ganti isi `login()` / `register()` di
- * authService.js agar mengembalikan { token, user } dari API asli -
- * context ini tidak perlu diubah.
- * ------------------------------------------------------------------
- */
 const AUTH_STORAGE_KEY = "authUser";
 const TOKEN_STORAGE_KEY = "authToken";
-
 const AuthContext = createContext(null);
 
 function readStoredUser() {

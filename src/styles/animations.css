@@ -1,63 +1,47 @@
-/**
- * animations.css
- * ------------------------------------------------------------------
- * Animasi terpusat yang dipakai di SELURUH halaman aplikasi supaya
- * tampilan terasa lebih modern & hidup:
- *  - .page-enter         -> animasi masuk untuk root tiap halaman (fade + slide up)
- *  - .stagger-item       -> animasi masuk berurutan untuk item dalam list/grid (card, row, dst)
- *  - tombol, card, baris tabel -> micro-interaction saat hover/klik
- *  - sidebar nav item    -> transisi halus saat pindah halaman
- *
- * Cukup di-import sekali di main.jsx supaya berlaku global.
- * ------------------------------------------------------------------
- */
-
 @keyframes pageFadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+from {
+opacity: 0;
+transform: translateY(14px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+from { opacity: 0; }
+to { opacity: 1; }
 }
 
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+from {
+opacity: 0;
+transform: scale(0.96);
+}
+to {
+opacity: 1;
+transform: scale(1);
+}
 }
 
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+from {
+opacity: 0;
+transform: translateX(-16px);
+}
+to {
+opacity: 1;
+transform: translateX(0);
+}
 }
 
-/* Setiap halaman (root <>...</> dibungkus div.page-enter lewat MainLayout/Outlet) */
 .page-enter {
-  animation: pageFadeInUp 0.38s ease both;
+animation: none;
 }
 
-/* Item dalam grid/list (summary card, overview card, baris tabel) muncul berurutan */
 .stagger-item {
-  animation: pageFadeInUp 0.4s ease both;
+animation: pageFadeInUp 0.4s ease both;
 }
 
 .stagger-item:nth-child(1) { animation-delay: 0.02s; }
@@ -68,19 +52,17 @@
 .stagger-item:nth-child(6) { animation-delay: 0.22s; }
 .stagger-item:nth-child(n+7) { animation-delay: 0.24s; }
 
-/* Tabel: setiap baris fade-in halus saat data pertama kali tampil */
 tbody tr {
-  animation: fadeIn 0.35s ease both;
+animation: fadeIn 0.35s ease both;
 }
 
-/* Kartu summary / overview: sedikit "lift" saat hover supaya terasa interaktif */
 [class*="summary-card"],
 [class*="-card"]:not(.logout-modal) {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 [class*="summary-card"]:hover {
-  transform: translateY(-3px);
+transform: translateY(-3px);
 }
 
 [class*="overview-grid"] > [class*="-card"]:hover,
@@ -89,88 +71,81 @@ tbody tr {
 .network-card:hover,
 .peripherals-card:hover,
 .device-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 14px 28px rgba(20, 30, 70, 0.12);
+transform: translateY(-4px);
+box-shadow: 0 14px 28px rgba(20, 30, 70, 0.12);
 }
 
-/* Tombol: tekan terasa "menekan", hover sedikit terangkat */
 button {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, opacity 0.2s ease;
+transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, opacity 0.2s ease;
 }
 
 button:active:not(:disabled) {
-  transform: scale(0.96);
+transform: scale(0.96);
 }
 
 .btn-add,
 .btn-primary,
 [class*="btn-save"],
 [class*="-btn-save"] {
-  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .btn-add:hover:not(:disabled),
 .btn-primary:hover:not(:disabled),
 [class*="btn-save"]:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+transform: translateY(-2px);
+box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
 }
 
-/* Tombol action (view/edit/delete) di tabel: bounce kecil saat hover */
 .btn-view,
 .btn-edit,
 .btn-delete {
-  transition: transform 0.15s ease, opacity 0.15s ease;
+transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 .btn-view:hover,
 .btn-edit:hover,
 .btn-delete:hover {
-  transform: scale(1.15);
+transform: scale(1.15);
 }
 
-/* Sidebar nav item: transisi halus + indikator aktif yang lebih hidup */
 .nav-item,
 .submenu-item {
-  transition: background 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
+transition: background 0.2s ease, color 0.2s ease, padding-left 0.2s ease;
 }
 
 .nav-item:hover {
-  padding-left: 32px;
+padding-left: 32px;
 }
 
 .nav-active {
-  animation: slideInLeft 0.3s ease;
+animation: slideInLeft 0.3s ease;
 }
 
-/* Dropdown filter (year/status) muncul dengan animasi kecil */
 [class*="-year-drop"],
 [class*="-filter-drop"],
 [class*="-location-drop"] {
-  animation: scaleIn 0.18s ease both;
-  transform-origin: top;
+animation: scaleIn 0.18s ease both;
+transform-origin: top;
 }
 
-/* Badge status: sedikit "pulse" supaya terasa hidup, terutama untuk status kritikal */
 .badge-broken {
-  animation: badgePulse 2s ease-in-out infinite;
+animation: badgePulse 2s ease-in-out infinite;
 }
 
 @keyframes badgePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.0); }
-  50% { box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.12); }
+0%, 100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.0); }
+50% { box-shadow: 0 0 0 4px rgba(229, 57, 53, 0.12); }
 }
 
-/* Loading text (skeleton sederhana) */
 .dash-loading-text {
-  animation: fadeIn 0.3s ease both;
+animation: fadeIn 0.3s ease both;
 }
 
-/* Hormati preferensi pengguna yang mematikan animasi */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-  }
+*, *::before, *::after {
+animation-duration: 0.001ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.001ms !important;
+}
 }

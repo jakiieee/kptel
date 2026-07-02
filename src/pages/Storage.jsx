@@ -1,80 +1,112 @@
 import "../styles/storage.css";
+import "../styles/animations.css";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HardDrive, Usb, Activity, Disc3 } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
-
-const storageCards = [
-  {
-    title: "SSD Inventory",
-    total: "Total Stock: 150 Pcs",
-    info1: "In Store: 40 pcs",
-    info2: "Deployed: 110 pcs",
-    color: "red",
-    button: "Manage SSD",
-    path: "/storage/ssd",
-    icon: Disc3,
-  },
-  {
-    title: "HDD & NAS Storage",
-    total: "Total Stock: 45 Units",
-    info1: "Healthy: 42 Units",
-    info2: "Need Replacement: 3 Units",
-    color: "yellow",
-    button: "Manage Storage",
-    path: "/storage/hdd",
-    icon: HardDrive,
-  },
-  {
-    title: "Flashdisk Inventory",
-    total: "Total Procedurement (2024): 80 pcs",
-    info1: "Available: 15 pcs",
-    info2: "",
-    color: "green",
-    button: "Manage Flashdisk",
-    path: "/storage/flashdisk",
-    icon: Usb,
-  },
-  {
-    title: "Drive Health Inspection Logs",
-    total: "Last Maintenance: 21 Feb 2024",
-    info1: "Total Inspected Devices: 73 pcs",
-    info2: "",
-    color: "blue",
-    button: "View Health Reports",
-    path: "/storage/health",
-    icon: Activity,
-  },
-];
-
-const storageData = [
-  { label: "SSD Inventory", percent: 65 },
-  { label: "HDD & NAS Storage", percent: 40 },
-  { label: "Flashdisk Inventory", percent: 50 },
-  { label: "Drive Health Inspection Repports Logs", percent: 80 },
-];
-
-const getBarColor = (pct) => {
-  if (pct <= 30) return "#E53935";
-  if (pct <= 60) return "#FFD600";
-  return "#32CD32";
-};
+import { ssdAssetService } from "../services/ssdAssetService";
+import { hddAssetService } from "../services/hddAssetService";
+import { flashdiskAssetService } from "../services/flashdiskAssetService";
+import { healthReportService } from "../services/healthReportService";
 
 export default function Storage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const keyword = search.toLowerCase();
+  const [counts, setCounts] = useState({
+    ssd: 0,
+    hdd: 0,
+    flashdisk: 0,
+    health: 0,
+  });
 
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCounts() {
+      const [ssd, hdd, flashdisk, health] = await Promise.all([
+        ssdAssetService.list(),
+        hddAssetService.list(),
+        flashdiskAssetService.list(),
+        healthReportService.list(),
+      ]);
+      if (isMounted) {
+        setCounts({
+          ssd: ssd.length,
+          hdd: hdd.length,
+          flashdisk: flashdisk.length,
+          health: health.length,
+        });
+      }
+    }
+    loadCounts();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const storageCards = [
+    {
+      title: "SSD Inventory",
+      total: `Total Stock: ${counts.ssd} Units`,
+      info1: `In Store: ${counts.ssd} Units`,
+      info2: "In Use: 0 Units",
+      color: "red",
+      button: "Manage SSD",
+      path: "/storage/ssd",
+      icon: Disc3,
+    },
+    {
+      title: "HDD & NAS Storage",
+      total: `Total Stock: ${counts.hdd} Units`,
+      info1: `Healthy: ${counts.hdd} Units`,
+      info2: "Need Replacement: 0 Units",
+      color: "yellow",
+      button: "Manage Storage",
+      path: "/storage/hdd",
+      icon: HardDrive,
+    },
+    {
+      title: "Flashdisk Inventory",
+      total: `Total Stock: ${counts.flashdisk} Units`,
+      info1: "Available: 0 Units",
+      info2: "",
+      color: "green",
+      button: "Manage Flashdisk",
+      path: "/storage/flashdisk",
+      icon: Usb,
+    },
+    {
+      title: "Drive Health Inspection Logs",
+      total: `Total Reports: ${counts.health}`,
+      info1: "Latest Maintenance: -",
+      info2: "",
+      color: "blue",
+      button: "View Health Reports",
+      path: "/storage/health",
+      icon: Activity,
+    },
+  ];
+
+  const storageData = [
+    { label: "SSD Inventory", percent: 65 },
+    { label: "HDD & NAS Storage", percent: 40 },
+    { label: "Flashdisk Inventory", percent: 50 },
+    { label: "Drive Health Inspection Repports Logs", percent: 80 },
+  ];
+
+  const getBarColor = (pct) => {
+    if (pct <= 30) return "#E53935";
+    if (pct <= 60) return "#FFD600";
+    return "#32CD32";
+  };
+
+  const keyword = search.toLowerCase();
   const filteredCards = storageCards.filter((item) =>
     item.title.toLowerCase().includes(keyword)
   );
   const filteredStorage = storageData.filter((item) =>
     item.label.toLowerCase().includes(keyword)
   );
-
-  // Bug lama: hasResult dihitung sebelum filteredStorage didefinisikan -> ReferenceError.
-  // Sudah diperbaiki: kedua filter dihitung dulu, baru hasResult.
   const hasResult = filteredCards.length > 0 || filteredStorage.length > 0;
 
   return (
@@ -89,7 +121,10 @@ export default function Storage() {
             {filteredCards.map((card) => {
               const Icon = card.icon;
               return (
-                <div className={`storage-card ${card.color}`} key={card.title}>
+                <div
+                  className={`storage-card ${card.color} stagger-item`}
+                  key={card.title}
+                >
                   <div className="storage-card-header">
                     <Icon size={26} />
                     <h3>{card.title}</h3>
@@ -107,7 +142,7 @@ export default function Storage() {
             })}
           </div>
 
-          <section className="section">
+          <section className="section stagger-item">
             <h2 className="section-title">Storage Capacity Distribution</h2>
 
             <div className="bar-list">

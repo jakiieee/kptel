@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { Layers, Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Layers, Plus, Eye, Pencil, Trash2, ImagePlus } from "lucide-react";
 import "../styles/combo.css";
-import "../styles/dashboard.css"; // dipakai oleh PhotoViewModal & ConfirmDeleteModal (dash-modal-*)
+import "../styles/dashboard.css"; 
+import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
@@ -16,8 +17,9 @@ const emptyForm = {
   assignTo: "",
   dept: "",
   pcName: "",
-  status: "NULL",
-  badge: "null",
+  category: "Peripherals & Accecories",
+  subCategory: "Combo",
+  status: " IN USE",
   photo: "",
 };
 
@@ -32,11 +34,11 @@ export default function PeripheralsCombo() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const fileInputRef = useRef(null);
+  const [assetImage, setAssetImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [viewTarget, setViewTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -65,8 +67,10 @@ export default function PeripheralsCombo() {
   const hasResult = filtered.length > 0;
   const isEdit = Boolean(formData.id);
   const totalStock = filtered.length;
+  const inUse = 0;
+  const inStore = totalStock;
 
-  function openAdd() {
+  function openAddModal() {
     setFormData(emptyForm);
     setShowFormModal(true);
   }
@@ -139,22 +143,44 @@ export default function PeripheralsCombo() {
       ) : hasResult ? (
         <>
           <div className="combo-topbar">
-            <h1 className="combo-title">Combo Device (Keyboard + Mouse)</h1>
+            <h1 className="combo-title">Combo Device</h1>
 
             <div className="combo-topbar-right">
-              <div className="combo-summary-card combo-summary-yellow">
-                <span className="combo-summary-label">Total Stock</span>
-                <span className="combo-summary-value">{totalStock} Unit</span>
+              <div className="combo-summary-card combo-summary-yellow stagger-item">
+                  <span className="combo-summary-label">
+                      Total Stock
+                  </span>
+                  <span className="combo-summary-value">
+                      {totalStock} Unit
+                  </span>
               </div>
 
-              <button className="btn-add" onClick={openAdd}>
+              <div className="combo-summary-card combo-summary-green stagger-item">
+                  <span className="combo-summary-label">
+                      In Use
+                  </span>
+                  <span className="combo-summary-value">
+                      {inUse} Unit
+                  </span>
+              </div>
+
+              <div className="combo-summary-card combo-summary-blue stagger-item">
+                  <span className="combo-summary-label">
+                      In Store
+                  </span>
+                  <span className="combo-summary-value">
+                      {inStore} Unit
+                  </span>
+              </div>
+
+              <button className="btn-add-dashboard" onClick={openAddModal}>
                 <Plus size={18} />
                 Add New Asset
               </button>
             </div>
           </div>
 
-          <section className="combo-section">
+          <section className="combo-section stagger-item">
             <h2 className="combo-section-title">
               <Layers size={22} />
               Master Tabel Data Combo Device
@@ -210,86 +236,177 @@ export default function PeripheralsCombo() {
         <NotFoundState />
       )}
 
-      {/* ADD / EDIT MODAL */}
       {showFormModal && (
-        <div className="combo-modal-overlay" onClick={closeForm}>
-          <div className="combo-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="combo-modal-header">
-              <h2 className="combo-modal-title">{isEdit ? "Edit Asset" : "Add New Asset"}</h2>
-              <button className="combo-modal-close" onClick={closeForm}>
+        <div
+          className="dash-modal-overlay"
+          onClick={() => {
+            setShowFormModal(false);
+            setFormData(emptyForm);
+            setAssetImage(null);
+          }}
+        >
+          <div className="dash-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h2 className="dash-modal-title">Add New Asset</h2>
+              <button
+                className="dash-modal-close"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+              >
                 ×
               </button>
             </div>
 
-            <div className="combo-modal-body">
-              <div className="combo-form-row">
-                <div className="combo-form-group">
+            <div className="dash-modal-body">
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Entity ID</label>
                   <input
-                    placeholder="e.g. Combo-Site-23001"
+                    placeholder="..."
                     value={formData.entityId}
-                    onChange={(e) => handleFormChange("entityId", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("entityId", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="combo-form-group">
+                <div className="dash-form-group">
                   <label>Serial Number</label>
                   <input
+                    type="date"
                     value={formData.serialNumber}
-                    onChange={(e) => handleFormChange("serialNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("serialNumber", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Category</label>
+                  <input
+                    value={formData.category}
+                    readOnly 
                   />
                 </div>
 
-                <div className="combo-form-group">
+                <div className="dash-form-group">
+                  <label>Department</label>
+                  <input
+                    placeholder="..."
+                    value={formData.dept}
+                    onChange={(e)=>
+                      handleFormChange("dept", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Sub Category</label>
+                  <input
+                    value={formData.subCategory}
+                    readOnly 
+                  />
+                </div>
+
+                <div className="dash-form-group">
                   <label>Assign To</label>
                   <input
+                    placeholder="..."
                     value={formData.assignTo}
-                    onChange={(e) => handleFormChange("assignTo", e.target.value)}
+                    onChange={(e)=>
+                      handleFormChange("assignTo", e.target.value)
+                    }
                   />
                 </div>
+              </div>
 
-                <div className="combo-form-group">
-                  <label>Dept</label>
-                  <input
-                    value={formData.dept}
-                    onChange={(e) => handleFormChange("dept", e.target.value)}
-                  />
-                </div>
-
-                <div className="combo-form-group">
-                  <label>PC Name</label>
-                  <input
-                    value={formData.pcName}
-                    onChange={(e) => handleFormChange("pcName", e.target.value)}
-                  />
-                </div>
-
-                <div className="combo-form-group">
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Status</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => handleFormChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("status", e.target.value)
+                    }
                   >
-                    {COMBO_STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.value}
-                      </option>
-                    ))}
+                    <option value="In Use">In Use</option>
+                    <option value="In Store">In Store</option>
+                    <option value="Broken">Broken</option>
+                    <option value="Null">Null</option>
                   </select>
                 </div>
 
-                <PhotoUploadField
-                  value={formData.photo}
-                  onChange={(value) => handleFormChange("photo", value)}
-                />
+                <div className="dash-form-group">
+                  <label>PC Name</label>
+                  <input
+                    placeholder="..."
+                    value={formData.pcName}
+                    onChange={(e) =>
+                      handleFormChange("pcName", e.target.value)
+                    }
+                  />
+                </div>
               </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full photo-upload-field">
+                  <label>Photo</label>
+                  <label className="photo-upload-box">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setAssetImage(URL.createObjectURL(file));
+                      }}
+                    />
+                    {assetImage ? (
+                      <img
+                        src={assetImage}
+                        alt="Preview"
+                        className="photo-upload-preview"
+                      />
+                    ) : (
+                      <div className="photo-upload-placeholder">
+                        < ImagePlus size={22} />
+                        <span>Click to upload</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <div className="combo-modal-footer">
-              <button className="combo-btn-cancel" onClick={closeForm}>
+            <div className="dash-modal-footer">
+              <button
+                className="dash-btn-cancel"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+                disabled={isSaving}
+              >
                 Cancel
               </button>
-              <button className="combo-btn-save" onClick={handleSave} disabled={isSaving}>
+              <button
+                className="dash-btn-save"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
@@ -297,7 +414,6 @@ export default function PeripheralsCombo() {
         </div>
       )}
 
-      {/* VIEW MODAL (Foto) */}
       <PhotoViewModal
         open={!!viewTarget}
         title="Combo Device Photo"
@@ -306,7 +422,6 @@ export default function PeripheralsCombo() {
         onClose={() => setViewTarget(null)}
       />
 
-      {/* DELETE CONFIRM MODAL */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Delete Combo Device Asset"

@@ -1,15 +1,3 @@
-/**
- * PhotoViewModal.jsx
- * ------------------------------------------------------------------
- * Modal "View" yang menampilkan FOTO dari item/asset yang dipilih
- * (bukan daftar detail field). Dipakai oleh tombol mata (Eye/View) di
- * semua halaman tabel asset (RAM, SSD, HDD, Network, Peripherals, dst).
- *
- * Setiap asset sekarang punya field `photo` (data URL hasil upload di
- * form Add/Edit). Jika item belum punya foto, modal menampilkan
- * placeholder agar tetap rapi.
- * ------------------------------------------------------------------
- */
 import { ImageOff } from "lucide-react";
 
 export default function PhotoViewModal({ open, title = "Asset Photo", photo, label, onClose }) {

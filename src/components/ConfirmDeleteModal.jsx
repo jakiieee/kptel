@@ -1,11 +1,3 @@
-/**
- * ConfirmDeleteModal.jsx
- * ------------------------------------------------------------------
- * Modal konfirmasi hapus pengganti window.confirm(). Dipakai di semua
- * halaman yang punya tombol delete (ListPC, StorageSSD, StorageHDD,
- * StorageFlashdisk, StorageHealth).
- * ------------------------------------------------------------------
- */
 export default function ConfirmDeleteModal({
   open,
   title = "Delete Item",

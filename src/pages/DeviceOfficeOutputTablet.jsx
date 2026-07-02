@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { Tablet as TabletIcon, Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Tablet as TabletIcon, Plus, Eye, Pencil, Trash2, ImagePlus } from "lucide-react";
 import "../styles/tablet.css";
-import "../styles/dashboard.css"; // dipakai oleh PhotoViewModal & ConfirmDeleteModal (dash-modal-*)
+import "../styles/dashboard.css";
+import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
@@ -14,9 +15,9 @@ const emptyForm = {
   entityId: "",
   serialNumber: "",
   charger: "",
-  caseItem: "",
-  status: "IN USE",
-  badge: "good",
+  case: "",
+  category: "Device Office Output",
+  subCategory: "Tablet",
   photo: "",
 };
 
@@ -30,11 +31,11 @@ export default function DeviceOfficeOutputTablet() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const fileInputRef = useRef(null);
+  const [assetImage, setAssetImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [viewTarget, setViewTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -67,7 +68,7 @@ export default function DeviceOfficeOutputTablet() {
   const inUse = filtered.filter((a) => a.status === "IN USE").length;
   const inStore = filtered.filter((a) => a.status === "IN STORE").length;
 
-  function openAdd() {
+  function openAddModal() {
     setFormData(emptyForm);
     setShowFormModal(true);
   }
@@ -144,31 +145,31 @@ export default function DeviceOfficeOutputTablet() {
 
             <div className="tablet-header-actions">
               <div className="tablet-summary-grid">
-                <div className="tablet-summary-card">
+                <div className="tablet-summary-card stagger-item">
                   <div className="tablet-summary-bar" style={{ background: "#f5a623" }} />
                   <p className="tablet-summary-label">Total Stock</p>
                   <p className="tablet-summary-value">{totalStock} Unit</p>
                 </div>
-                <div className="tablet-summary-card">
+                <div className="tablet-summary-card stagger-item">
                   <div className="tablet-summary-bar" style={{ background: "#43a047" }} />
                   <p className="tablet-summary-label">In Use</p>
                   <p className="tablet-summary-value">{inUse} Unit</p>
                 </div>
-                <div className="tablet-summary-card">
+                <div className="tablet-summary-card stagger-item">
                   <div className="tablet-summary-bar" style={{ background: "#1e88e5" }} />
                   <p className="tablet-summary-label">In Store</p>
                   <p className="tablet-summary-value">{inStore} Unit</p>
                 </div>
               </div>
 
-              <button className="btn-add" onClick={openAdd}>
+              <button className="btn-add-dashboard" onClick={openAddModal}>
                 <Plus size={18} />
                 Add New Asset
               </button>
             </div>
           </div>
 
-          <section className="tablet-section">
+          <section className="tablet-section stagger-item">
             <h2 className="tablet-section-title">
               <TabletIcon size={22} />
               Master Tabel Data Tablet
@@ -222,77 +223,148 @@ export default function DeviceOfficeOutputTablet() {
         <NotFoundState />
       )}
 
-      {/* ADD / EDIT MODAL */}
       {showFormModal && (
-        <div className="tablet-modal-overlay" onClick={closeForm}>
-          <div className="tablet-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="tablet-modal-header">
-              <h2 className="tablet-modal-title">{isEdit ? "Edit Asset" : "Add New Asset"}</h2>
-              <button className="tablet-modal-close" onClick={closeForm}>
+        <div
+          className="dash-modal-overlay"
+          onClick={() => {
+            setShowFormModal(false);
+            setFormData(emptyForm);
+            setAssetImage(null);
+          }}
+        >
+          <div className="dash-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h2 className="dash-modal-title">Add New Asset</h2>
+              <button
+                className="dash-modal-close"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+              >
                 ×
               </button>
             </div>
 
-            <div className="tablet-modal-body">
-              <div className="tablet-form-row">
-                <div className="tablet-form-group">
+            <div className="dash-modal-body">
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Entity ID</label>
                   <input
+                    placeholder="..."
                     value={formData.entityId}
-                    onChange={(e) => handleFormChange("entityId", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("entityId", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="tablet-form-group">
+                <div className="dash-form-group">
                   <label>Serial Number</label>
                   <input
                     value={formData.serialNumber}
-                    onChange={(e) => handleFormChange("serialNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("serialNumber", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Category</label>
+                  <input
+                    value={formData.category}
+                    readOnly 
                   />
                 </div>
 
-                <div className="tablet-form-group">
+                <div className="dash-form-group">
                   <label>Charger</label>
                   <input
+                    placeholder="..."
                     value={formData.charger}
-                    onChange={(e) => handleFormChange("charger", e.target.value)}
+                    onChange={(e)=>
+                      handleFormChange("charger", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Sub Category</label>
+                  <input
+                    value={formData.subCategory}
+                    readOnly 
                   />
                 </div>
 
-                <div className="tablet-form-group">
+                <div className="dash-form-group">
                   <label>Case</label>
                   <input
-                    value={formData.caseItem}
-                    onChange={(e) => handleFormChange("caseItem", e.target.value)}
+                    placeholder="..."
+                    value={formData.case}
+                    onChange={(e)=>
+                      handleFormChange("case", e.target.value)
+                    }
                   />
                 </div>
-
-                <div className="tablet-form-group full">
-                  <label>Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => handleFormChange("status", e.target.value)}
-                  >
-                    {TABLET_STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.value}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <PhotoUploadField
-                  value={formData.photo}
-                  onChange={(value) => handleFormChange("photo", value)}
-                />
               </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full photo-upload-field">
+                  <label>Photo</label>
+                  <label className="photo-upload-box">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setAssetImage(URL.createObjectURL(file));
+                      }}
+                    />
+                    {assetImage ? (
+                      <img
+                        src={assetImage}
+                        alt="Preview"
+                        className="photo-upload-preview"
+                      />
+                    ) : (
+                      <div className="photo-upload-placeholder">
+                        < ImagePlus size={22} />
+                        <span>Click to upload</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <div className="tablet-modal-footer">
-              <button className="tablet-btn-cancel" onClick={closeForm}>
+            <div className="dash-modal-footer">
+              <button
+                className="dash-btn-cancel"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+                disabled={isSaving}
+              >
                 Cancel
               </button>
-              <button className="tablet-btn-save" onClick={handleSave} disabled={isSaving}>
+              <button
+                className="dash-btn-save"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
@@ -300,7 +372,6 @@ export default function DeviceOfficeOutputTablet() {
         </div>
       )}
 
-      {/* VIEW MODAL (Foto) */}
       <PhotoViewModal
         open={!!viewTarget}
         title="Tablet Photo"
@@ -309,7 +380,6 @@ export default function DeviceOfficeOutputTablet() {
         onClose={() => setViewTarget(null)}
       />
 
-      {/* DELETE CONFIRM MODAL */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Delete Tablet Asset"

@@ -1,7 +1,8 @@
-import { Usb, Plus, Eye, Pencil, Trash2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Usb, Plus, Eye, Pencil, Trash2, ImagePlus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import "../styles/flashdisk.css";
-import "../styles/dashboard.css"; // dipakai oleh PhotoViewModal & ConfirmDeleteModal (dash-modal-*)
+import "../styles/dashboard.css"; 
+import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
@@ -12,12 +13,13 @@ import { flashdiskAssetService, FLASHDISK_STATUSES } from "../services/flashdisk
 const emptyForm = {
   id: null,
   entityId: "",
+  category: "Storage Management",
+  subCategory: "Flashdisk",
   serialNumber: "",
-  device: "",
-  allocation: "",
   dept: "",
-  status: "IN STORE",
-  badge: "store",
+  location: "",
+  status: "NULL",
+  badge: "good",
   photo: "",
 };
 
@@ -29,11 +31,11 @@ export default function StorageFlashdisk() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const fileInputRef = useRef(null);
+  const [assetImage, setAssetImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [viewTarget, setViewTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -141,7 +143,7 @@ export default function StorageFlashdisk() {
 
             <div className="fd-summary-grid">
               {summary.map((item) => (
-                <div key={item.label} className="fd-summary-card">
+                <div key={item.label} className="fd-summary-card stagger-item">
                   <div className="fd-summary-bar" style={{ background: item.color }} />
                   <p className="fd-summary-label">{item.label}</p>
                   <p className="fd-summary-value">{item.value} Unit</p>
@@ -150,14 +152,14 @@ export default function StorageFlashdisk() {
             </div>
 
             <div className="fd-header-actions">
-              <button className="btn-add" onClick={openAddModal}>
+              <button className="btn-add-dashboard" onClick={openAddModal}>
                 <Plus size={18} />
                 Add New Asset
               </button>
             </div>
           </div>
 
-          <section className="fd-section">
+          <section className="fd-section stagger-item">
             <h2 className="fd-section-title">
               <Usb size={22} />
               Master Table Data Flashdisk
@@ -212,91 +214,166 @@ export default function StorageFlashdisk() {
         <NotFoundState />
       )}
 
-      {/* MODAL: Add / Edit */}
       {showFormModal && (
-        <div className="fd-modal-overlay" onClick={() => setShowFormModal(false)}>
-          <div className="fd-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="fd-modal-header">
-              <h2 className="fd-modal-title">{formData.id ? "Edit Asset" : "Add New Asset"}</h2>
-              <button className="fd-modal-close" onClick={() => setShowFormModal(false)}>
+        <div
+          className="dash-modal-overlay"
+          onClick={() => {
+            setShowFormModal(false);
+            setFormData(emptyForm);
+            setAssetImage(null);
+          }}
+        >
+          <div className="dash-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h2 className="dash-modal-title">Add New Asset</h2>
+              <button
+                className="dash-modal-close"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+              >
                 ×
               </button>
             </div>
 
-            <div className="fd-modal-body">
-              <div className="fd-form-row">
-                <div className="fd-form-group">
+            <div className="dash-modal-body">
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Entity ID</label>
                   <input
-                    placeholder="e.g. FD-SITE-24004"
+                    placeholder="..."
                     value={formData.entityId}
-                    onChange={(e) => handleFormChange("entityId", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("entityId", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="fd-form-group">
+                <div className="dash-form-group">
                   <label>Serial Number</label>
                   <input
+                    placeholder="..."
                     value={formData.serialNumber}
-                    onChange={(e) => handleFormChange("serialNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("serialNumber", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Category</label>
+                  <input
+                    value={formData.category}
+                    readOnly
                   />
                 </div>
 
-                <div className="fd-form-group">
-                  <label>Device USB / Type</label>
+                <div className="dash-form-group">
+                  <label>Location</label>
                   <input
-                    placeholder="e.g. Flashdisk 32GB"
-                    value={formData.device}
-                    onChange={(e) => handleFormChange("device", e.target.value)}
+                    placeholder="..."
+                    value={formData.location}
+                    onChange={(e) =>
+                      handleFormChange("location", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Sub Category</label>
+                  <input
+                    value={formData.subCategory}
+                    readOnly
                   />
                 </div>
 
-                <div className="fd-form-group">
-                  <label>Allocation</label>
+                <div className="dash-form-group">
+                  <label>Department</label>
                   <input
-                    value={formData.allocation}
-                    onChange={(e) => handleFormChange("allocation", e.target.value)}
-                  />
-                </div>
-
-                <div className="fd-form-group">
-                  <label>Dept</label>
-                  <input
+                    placeholder="..."
                     value={formData.dept}
-                    onChange={(e) => handleFormChange("dept", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("dept", e.target.value)
+                    }
                   />
                 </div>
+              </div>
 
-                <div className="fd-form-group">
+              <div className="dash-form-row">
+                <div className="dash-form-group full">
                   <label>Status</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => handleFormChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("status", e.target.value)
+                    }
                   >
-                    {FLASHDISK_STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.value}
-                      </option>
-                    ))}
+                    <option value="In Use">In Use</option>
+                    <option value="In Store">In Store</option>
+                    <option value="Broken">Broken</option>
+                    <option value="Null">Null</option>
                   </select>
                 </div>
-
-                <PhotoUploadField
-                  value={formData.photo}
-                  onChange={(value) => handleFormChange("photo", value)}
-                />
               </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full photo-upload-field">
+                  <label>Photo</label>
+                  <label className="photo-upload-box">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setAssetImage(URL.createObjectURL(file));
+                      }}
+                    />
+                    {assetImage ? (
+                      <img
+                        src={assetImage}
+                        alt="Preview"
+                        className="photo-upload-preview"
+                      />
+                    ) : (
+                      <div className="photo-upload-placeholder">
+                        < ImagePlus size={22} />
+                        <span>Click to upload</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <div className="fd-modal-footer">
+            <div className="dash-modal-footer">
               <button
-                className="fd-btn-cancel"
-                onClick={() => setShowFormModal(false)}
+                className="dash-btn-cancel"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
                 disabled={isSaving}
               >
                 Cancel
               </button>
-              <button className="fd-btn-save" onClick={saveAsset} disabled={isSaving}>
+              <button
+                className="dash-btn-save"
+                onClick={saveAsset}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
@@ -304,7 +381,6 @@ export default function StorageFlashdisk() {
         </div>
       )}
 
-      {/* MODAL: View (Foto) */}
       <PhotoViewModal
         open={!!viewTarget}
         title="Flashdisk Photo"
@@ -313,7 +389,6 @@ export default function StorageFlashdisk() {
         onClose={() => setViewTarget(null)}
       />
 
-      {/* MODAL: Delete confirm */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Delete Flashdisk Asset"

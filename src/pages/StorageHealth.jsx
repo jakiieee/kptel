@@ -1,7 +1,8 @@
-import { Activity, Plus, Eye, Pencil, Trash2, ChevronDown } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Activity, Plus, Eye, Pencil, Trash2, ChevronDown, ImagePlus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import "../styles/health.css";
-import "../styles/dashboard.css"; // dipakai oleh PhotoViewModal & ConfirmDeleteModal (dash-modal-*)
+import "../styles/dashboard.css"; 
+import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
@@ -15,16 +16,16 @@ import {
 
 const emptyForm = {
   id: null,
-  employee: "",
+  lastCheckDate: "",
+  category: "Storage Management",
+  subCategory: "HDD Health",
   dept: "",
-  pmDate: "",
-  month: "January",
-  deviceId: "",
+  type: "",
   deviceType: "",
+  deviceId: "",
   health: "",
-  type: "2'5",
-  status: "GOOD",
-  badge: "warning",
+  employeeName: "",
+  condition: "Null",
   photo: "",
 };
 
@@ -40,11 +41,11 @@ export default function StorageHealth() {
   const [search, setSearch] = useState("");
   const [month, setMonth] = useState("All Month");
   const [showMonthDrop, setShowMonthDrop] = useState(false);
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const fileInputRef = useRef(null);
+  const [assetImage, setAssetImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [viewTarget, setViewTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -109,7 +110,6 @@ export default function StorageHealth() {
       return;
     }
     if (field === "pmDate") {
-      // Sinkronkan otomatis nama bulan dari tanggal yang dipilih
       const monthName = value
         ? new Date(value).toLocaleString("en-US", { month: "long" })
         : formData.month;
@@ -120,7 +120,7 @@ export default function StorageHealth() {
   }
 
   async function saveReport() {
-    if (!formData.employee.trim() || !formData.deviceId.trim()) {
+    if (!formData.employeeName.trim() || !formData.deviceId.trim()) {
       alert("Please fill all required fields");
       return;
     }
@@ -168,7 +168,7 @@ export default function StorageHealth() {
 
             <div className="health-summary-grid">
               {summary.map((item) => (
-                <div key={item.label} className="health-summary-card">
+                <div key={item.label} className="health-summary-card stagger-item">
                   <div className="health-summary-bar" style={{ background: item.color }} />
                   <p className="health-summary-label">{item.label}</p>
                   <p className="health-summary-value">{item.value} Unit</p>
@@ -204,14 +204,14 @@ export default function StorageHealth() {
                 )}
               </div>
 
-              <button className="btn-add" onClick={openAddModal}>
+              <button className="btn-add-dashboard" onClick={openAddModal}>
                 <Plus size={18} />
                 Add New Report
               </button>
             </div>
           </div>
 
-          <section className="health-section">
+          <section className="health-section stagger-item">
             <h2 className="health-section-title">
               <Activity size={22} />
               Master Table Data HDD Health
@@ -270,111 +270,202 @@ export default function StorageHealth() {
         <NotFoundState />
       )}
 
-      {/* MODAL: Add / Edit */}
       {showFormModal && (
-        <div className="health-modal-overlay" onClick={() => setShowFormModal(false)}>
-          <div className="health-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="health-modal-header">
-              <h2 className="health-modal-title">
-                {formData.id ? "Edit Report" : "Add New Report"}
-              </h2>
-              <button className="health-modal-close" onClick={() => setShowFormModal(false)}>
+        <div
+          className="dash-modal-overlay"
+          onClick={() => {
+            setShowFormModal(false);
+            setFormData(emptyForm);
+            setAssetImage(null);
+          }}
+        >
+          <div className="dash-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h2 className="dash-modal-title">Add New Asset</h2>
+              <button
+                className="dash-modal-close"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+              >
                 ×
               </button>
             </div>
 
-            <div className="health-modal-body">
-              <div className="health-form-row">
-                <div className="health-form-group">
-                  <label>Employee</label>
+            <div className="dash-modal-body">
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Employe Name</label>
                   <input
-                    value={formData.employee}
-                    onChange={(e) => handleFormChange("employee", e.target.value)}
+                    placeholder="..."
+                    value={formData.employeeNameName}
+                    onChange={(e) =>
+                      handleFormChange("employeeName", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="health-form-group">
-                  <label>Dept</label>
-                  <input
-                    value={formData.dept}
-                    onChange={(e) => handleFormChange("dept", e.target.value)}
-                  />
-                </div>
-
-                <div className="health-form-group">
-                  <label>PM Date</label>
+                <div className="dash-form-group">
+                  <label>Last Check Date</label>
                   <input
                     type="date"
-                    value={formData.pmDate}
-                    onChange={(e) => handleFormChange("pmDate", e.target.value)}
+                    value={formData.lastCheckDate}
+                    onChange={(e) =>
+                      handleFormChange("lastCheckDate", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Category</label>
+                  <input
+                    value={formData.category}
+                    readOnly
                   />
                 </div>
 
-                <div className="health-form-group">
+                <div className="dash-form-group">
                   <label>Device ID</label>
                   <input
-                    placeholder="e.g. TEL-PC-17020"
+                    placeholder="..."
                     value={formData.deviceId}
-                    onChange={(e) => handleFormChange("deviceId", e.target.value)}
+                    onChange={(e)=>
+                      handleFormChange("deviceId", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Sub Category</label>
+                  <input
+                    value={formData.subCategory}
+                    readOnly
                   />
                 </div>
 
-                <div className="health-form-group">
+                <div className="dash-form-group">
                   <label>Device Type</label>
                   <input
-                    placeholder="e.g. PC 7040"
+                    placeholder="..."
                     value={formData.deviceType}
-                    onChange={(e) => handleFormChange("deviceType", e.target.value)}
+                    onChange={(e)=>
+                      handleFormChange("deviceType", e.target.value)
+                    }
                   />
                 </div>
+              </div>
 
-                <div className="health-form-group">
-                  <label>Health (%)</label>
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Department</label>
                   <input
-                    placeholder="e.g. 92%"
-                    value={formData.health}
-                    onChange={(e) => handleFormChange("health", e.target.value)}
+                    placeholder="..."
+                    value={formData.department}
+                    onChange={(e) =>
+                      handleFormChange("department", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="health-form-group">
+                <div className="dash-form-group">
                   <label>Type</label>
                   <input
+                    placeholder="..."
                     value={formData.type}
-                    onChange={(e) => handleFormChange("type", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("type", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Health (%)</label>
+                  <input
+                    placeholder="..."
+                    value={formData.health}
+                    onChange={(e) =>
+                      handleFormChange("health", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="health-form-group">
-                  <label>Status</label>
+                <div className="dash-form-group">
+                  <label>Condition</label>
                   <select
-                    value={formData.status}
-                    onChange={(e) => handleFormChange("status", e.target.value)}
+                    value={formData.condition}
+                    onChange={(e) =>
+                      handleFormChange("condition", e.target.value)
+                    }
                   >
-                    {HEALTH_STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.value}
-                      </option>
-                    ))}
+                    <option value="Very Good">Very Good</option>
+                    <option value="Good">Good</option>
+                    <option value="Bad">Bad</option>
+                    <option value="Very Bad">Very Bad</option>
+                    <option value="Null">Very Bad</option>
                   </select>
                 </div>
-
-                <PhotoUploadField
-                  value={formData.photo}
-                  onChange={(value) => handleFormChange("photo", value)}
-                />
               </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full photo-upload-field">
+                  <label>Photo</label>
+                  <label className="photo-upload-box">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setAssetImage(URL.createObjectURL(file));
+                      }}
+                    />
+                    {assetImage ? (
+                      <img
+                        src={assetImage}
+                        alt="Preview"
+                        className="photo-upload-preview"
+                      />
+                    ) : (
+                      <div className="photo-upload-placeholder">
+                        < ImagePlus size={22} />
+                        <span>Click to upload</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <div className="health-modal-footer">
+            <div className="dash-modal-footer">
               <button
-                className="health-btn-cancel"
-                onClick={() => setShowFormModal(false)}
+                className="dash-btn-cancel"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
                 disabled={isSaving}
               >
                 Cancel
               </button>
-              <button className="health-btn-save" onClick={saveReport} disabled={isSaving}>
+              <button
+                className="dash-btn-save"
+                onClick={saveReport}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
@@ -382,7 +473,6 @@ export default function StorageHealth() {
         </div>
       )}
 
-      {/* MODAL: View (Foto) */}
       <PhotoViewModal
         open={!!viewTarget}
         title="Device Photo"
@@ -391,7 +481,6 @@ export default function StorageHealth() {
         onClose={() => setViewTarget(null)}
       />
 
-      {/* MODAL: Delete confirm */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Delete Health Report"

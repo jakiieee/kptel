@@ -4,15 +4,12 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import "../styles/auth.css";
 import { authService } from "../services/authService";
 
-// Steps: "email" -> "reset" -> "done"
 export default function ForgotPassword() {
   const navigate = useNavigate();
-
   const [step, setStep] = useState("email");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [isSendingLink, setIsSendingLink] = useState(false);
-
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPass, setShowPass] = useState(false);

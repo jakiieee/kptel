@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { Network, Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Network, Plus, Eye, Pencil, Trash2, ImagePlus } from "lucide-react";
 import "../styles/port.css";
-import "../styles/dashboard.css"; // dipakai oleh PhotoViewModal & ConfirmDeleteModal (dash-modal-*)
+import "../styles/dashboard.css";
+import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
@@ -18,8 +19,14 @@ const emptyForm = {
   id: null,
   entityId: "",
   serialNumber: "",
+  dept: "",
+  category: "Network Infrastructure",
+  subCategory: "Port",
   mac: "",
+  pcName: "",
   manufactur: "",
+  type: "",
+  size: "",
   port: "",
   year: "",
   photo: "",
@@ -29,11 +36,11 @@ export default function NetworkPort() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const fileInputRef = useRef(null);
+  const [assetImage, setAssetImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [viewTarget, setViewTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -61,12 +68,11 @@ export default function NetworkPort() {
   );
   const hasResult = filtered.length > 0;
   const isEdit = Boolean(formData.id);
-
   const totalStock = filtered.length;
   const inUse = filtered.filter((a) => a.status === "IN USE").length;
   const inStore = filtered.filter((a) => a.status === "IN STORE").length;
 
-  function openAdd() {
+  function openAddModal() {
     setFormData(emptyForm);
     setShowFormModal(true);
   }
@@ -140,27 +146,27 @@ export default function NetworkPort() {
             <h1 className="pt-title">Network Port</h1>
 
             <div className="pt-topbar-right">
-              <div className="pt-summary-card pt-summary-purple">
+              <div className="pt-summary-card pt-summary-purple stagger-item">
                 <span className="pt-summary-label">Total Stock</span>
                 <span className="pt-summary-value">{totalStock} Unit</span>
               </div>
-              <div className="pt-summary-card pt-summary-green">
+              <div className="pt-summary-card pt-summary-green stagger-item">
                 <span className="pt-summary-label">In Use</span>
                 <span className="pt-summary-value">{inUse} Unit</span>
               </div>
-              <div className="pt-summary-card pt-summary-blue">
+              <div className="pt-summary-card pt-summary-blue stagger-item">
                 <span className="pt-summary-label">In Store</span>
                 <span className="pt-summary-value">{inStore} Unit</span>
               </div>
 
-              <button className="btn-add" onClick={openAdd}>
+              <button className="btn-add-dashboard" onClick={openAddModal}>
                 <Plus size={18} />
                 Add New Asset
               </button>
             </div>
           </div>
 
-          <section className="pt-section">
+          <section className="pt-section stagger-item">
             <h2 className="pt-section-title">
               <Network size={22} />
               Master Tabel Data Network Port
@@ -214,103 +220,220 @@ export default function NetworkPort() {
         <NotFoundState />
       )}
 
-      {/* ADD / EDIT MODAL */}
       {showFormModal && (
-        <div className="pt-modal-overlay" onClick={closeForm}>
-          <div className="pt-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="pt-modal-header">
-              <h2 className="pt-modal-title">{isEdit ? "Edit Asset" : "Add New Asset"}</h2>
-              <button className="pt-modal-close" onClick={closeForm}>
+        <div
+          className="dash-modal-overlay"
+          onClick={() => {
+            setShowFormModal(false);
+            setFormData(emptyForm);
+            setAssetImage(null);
+          }}
+        >
+          <div className="dash-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h2 className="dash-modal-title">Add New Asset</h2>
+              <button
+                className="dash-modal-close"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+              >
                 ×
               </button>
             </div>
 
-            <div className="pt-modal-body">
-              <div className="pt-form-row">
-                <div className="pt-form-group">
+            <div className="dash-modal-body">
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Entity ID</label>
                   <input
-                    placeholder="e.g. Converter-Site-24001"
+                    placeholder="..."
                     value={formData.entityId}
-                    onChange={(e) => handleFormChange("entityId", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("entityId", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="pt-form-group">
+                <div className="dash-form-group">
                   <label>Serial Number</label>
                   <input
-                    placeholder="e.g. 202409200289"
+                    type="date"
                     value={formData.serialNumber}
-                    onChange={(e) => handleFormChange("serialNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("serialNumber", e.target.value)
+                    }
                   />
                 </div>
-
-                <div className="pt-form-group">
-                  <label>MAC Address</label>
-                  <input
-                    placeholder="e.g. 845A3E512152 (kosongkan jika tidak ada)"
-                    value={formData.mac}
-                    onChange={(e) => handleFormChange("mac", e.target.value)}
-                  />
-                </div>
-
-                <div className="pt-form-group">
-                  <label>Manufactur</label>
-                  <select
-                    value={formData.manufactur}
-                    onChange={(e) => handleFormChange("manufactur", e.target.value)}
-                  >
-                    <option value="">Select Manufactur</option>
-                    {NETWORKPORT_MANUFACTURERS.map((m) => (
-                      <option key={m} value={m}>
-                        {m}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="pt-form-group">
-                  <label>Port</label>
-                  <select
-                    value={formData.port}
-                    onChange={(e) => handleFormChange("port", e.target.value)}
-                  >
-                    <option value="">Select Port Count</option>
-                    {NETWORKPORT_PORTS.map((p) => (
-                      <option key={p} value={p}>
-                        {p} Port
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="pt-form-group">
-                  <label>Year</label>
-                  <select
-                    value={formData.year}
-                    onChange={(e) => handleFormChange("year", e.target.value)}
-                  >
-                    <option value="">Select Year</option>
-                    {NETWORKPORT_YEARS.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <PhotoUploadField
-                  value={formData.photo}
-                  onChange={(value) => handleFormChange("photo", value)}
-                />
               </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Category</label>
+                  <input
+                    value={formData.category}
+                    readOnly
+                  />
+                </div>
+
+                <div className="dash-form-group">
+                  <label>Department</label>
+                  <input
+                    placeholder="..."
+                    value={formData.department}
+                    onChange={(e)=>
+                      handleFormChange("department", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Sub Category</label>
+                  <input
+                    value={formData.subCategory}
+                    readOnly 
+                  />
+                </div>
+
+                <div className="dash-form-group">
+                  <label>PC Name</label>
+                  <input
+                    placeholder="..."
+                    value={formData.pcName}
+                    onChange={(e)=>
+                      handleFormChange("pcName", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>MAC</label>
+                  <input
+                    placeholder="..."
+                    value={formData.mac}
+                    onChange={(e) =>
+                      handleFormChange("mac", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="dash-form-group">
+                  <label>Type</label>
+                  <input
+                    placeholder="..."
+                    value={formData.type}
+                    onChange={(e) =>
+                      handleFormChange("type", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Size (GB)</label>
+                  <input
+                    value={formData.size}
+                    onChange={(e) =>
+                      handleFormChange("size", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="dash-form-group">
+                  <label>Manufactur</label>
+                  <input
+                    placeholder="..."
+                    value={formData.manufactur}
+                    onChange={(e) =>
+                      handleFormChange("manufactur", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Port</label>
+                  <input
+                    placeholder="..."
+                    value={formData.port}
+                    onChange={(e) =>
+                      handleFormChange("port", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="dash-form-group">
+                  <label>Purchase Year</label>
+                  <input
+                    placeholder="..."
+                    value={formData.year}
+                    onChange={(e) =>
+                      handleFormChange("year", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full photo-upload-field">
+                  <label>Photo</label>
+                  <label className="photo-upload-box">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setAssetImage(URL.createObjectURL(file));
+                      }}
+                    />
+                    {assetImage ? (
+                      <img
+                        src={assetImage}
+                        alt="Preview"
+                        className="photo-upload-preview"
+                      />
+                    ) : (
+                      <div className="photo-upload-placeholder">
+                        < ImagePlus size={22} />
+                        <span>Click to upload</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <div className="pt-modal-footer">
-              <button className="pt-btn-cancel" onClick={closeForm}>
+            <div className="dash-modal-footer">
+              <button
+                className="dash-btn-cancel"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+                disabled={isSaving}
+              >
                 Cancel
               </button>
-              <button className="pt-btn-save" onClick={handleSave} disabled={isSaving}>
+              <button
+                className="dash-btn-save"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
@@ -318,7 +441,6 @@ export default function NetworkPort() {
         </div>
       )}
 
-      {/* VIEW MODAL (Foto) */}
       <PhotoViewModal
         open={!!viewTarget}
         title="Network Port Photo"
@@ -327,7 +449,6 @@ export default function NetworkPort() {
         onClose={() => setViewTarget(null)}
       />
 
-      {/* DELETE CONFIRM MODAL */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Delete Network Port Asset"

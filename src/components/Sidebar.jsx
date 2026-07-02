@@ -283,6 +283,20 @@ const [showLogoutModal, setShowLogoutModal] = useState(false);
               >
                 HDMI Port
               </NavLink>
+
+              <NavLink 
+                to="/peripherals/msw" 
+                className="submenu-item"
+              >
+                Mouse Wireless
+              </NavLink>
+
+              <NavLink 
+                to="/peripherals/mouse" 
+                className="submenu-item"
+              >
+                Mouse
+              </NavLink>
             </div>
           )}
         </div>
@@ -315,14 +329,6 @@ const [showLogoutModal, setShowLogoutModal] = useState(false);
 
               <NavLink to="/network/fortiswitch" className="submenu-item">
                 FortiSwitch
-              </NavLink>
-
-              <NavLink to="/network/msw" className="submenu-item">
-                MSW
-              </NavLink>
-
-              <NavLink to="/network/mouse" className="submenu-item">
-                MS
               </NavLink>
             </div>
           )}
@@ -382,54 +388,47 @@ const [showLogoutModal, setShowLogoutModal] = useState(false);
         })}
       </nav>
 
-<button
-  className="nav-item signout"
-  onClick={() => setShowLogoutModal(true)}
->
-  <LogOut size={18} />
-  <span>Sign Out</span>
-</button>
-{showLogoutModal && (
-  <div className="logout-overlay">
-    <div className="logout-modal">
+      <button
+        className="nav-item signout"
+        onClick={() => setShowLogoutModal(true)}
+      >
+        <LogOut size={18} />
+        <span>Sign Out</span>
+      </button>
 
-      <div className="logout-icon">
-        <LogOut size={32} />
-      </div>
-
-      <h3 className="logout-title">
-        Sign Out
-      </h3>
-
-      <p className="logout-text">
-        Are you sure you want to sign out?
-      </p>
-
-      <div className="logout-buttons">
-
-        <button
-          className="logout-no"
-          onClick={() => setShowLogoutModal(false)}
-        >
-          No
-        </button>
-
-        <button
-          className="logout-yes"
-          onClick={() => {
-            logout();
-            setShowLogoutModal(false);
-            navigate("/");
-          }}
-        >
-          Yes
-        </button>
-
-      </div>
-
-    </div>
-  </div>
-)}
+      {showLogoutModal && (
+        <div className="logout-overlay">
+          <div className="logout-modal">
+            <div className="logout-icon">
+              <LogOut size={32} />
+            </div>
+            <h3 className="logout-title">
+              Sign Out
+            </h3>
+            <p className="logout-text">
+              Are you sure you want to sign out?
+            </p>
+            <div className="logout-buttons">
+              <button
+                className="logout-no"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                No
+              </button>
+              <button
+                className="logout-yes"
+                onClick={() => {
+                  logout();
+                  setShowLogoutModal(false);
+                  navigate("/");
+                }}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="sidebar-waves" />
     </aside>
   );

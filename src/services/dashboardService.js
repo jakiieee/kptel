@@ -18,24 +18,33 @@ export const defaultCategoryBars = [
   { label: "Devices & Office Output", pct: 25 },
 ];
 
-export const defaultActivities = [
+export const defaultActivities =  [
   {
     id: 1,
     type: "Updated",
     color: "#43a047",
-    text: "SSD 2023 | Admin changed stock qty | 5 mints ago",
+    title: "SSD 2023",
+    description: "Admin changed stock quantity",
+    user: "Admin",
+    createdAt: Date.now() - 1000 * 60 * 5,
   },
   {
     id: 2,
     type: "Created",
     color: "#f5a623",
-    text: "RAM 2024 | Add 10 new unit | 10 mints ago",
+    title: "RAM 2024",
+    description: "Added new asset",
+    user: "Admin",
+    createdAt: Date.now() - 1000 * 60 * 10,
   },
   {
     id: 3,
     type: "Deleted",
     color: "#e53935",
-    text: "Headphone 2023 | Remove broken unit (S/N: 059) | 5 mints ago",
+    title: "Headphone 2023",
+    description: "Removed broken unit",
+    user: "Admin",
+    createdAt: Date.now() - 1000 * 60 * 30,
   },
 ];
 
@@ -60,9 +69,15 @@ export const dashboardService = {
   },
 
   async getActivities() {
-    // TODO: BACKEND -> return apiClient.get('/dashboard/activities');
     await delay();
-    return loadCollection(ACTIVITIES_KEY, defaultActivities);
+    const data = loadCollection(ACTIVITIES_KEY, defaultActivities);
+    return data.map((item) => ({
+      ...item,
+      createdAt:
+        typeof item.createdAt === "number"
+          ? item.createdAt
+          : Date.now(),
+    }));
   },
 
   async getLowStock() {
@@ -92,17 +107,30 @@ export const dashboardService = {
   /**
    * Tambah asset baru dari modal "Add New Asset" di Dashboard.
    */
-  async addAsset(payload) {
-    // TODO: BACKEND -> return apiClient.post('/assets', payload);
-    await delay();
-    const activities = loadCollection(ACTIVITIES_KEY, defaultActivities);
-    const newActivity = {
-      id: Date.now(),
-      type: "Created",
-      color: "#f5a623",
-      text: `${payload.name} | Added via Dashboard | just now`,
-    };
-    saveCollection(ACTIVITIES_KEY, [newActivity, ...activities]);
-    return { success: true };
-  },
+async addAsset(payload) {
+  await delay();
+  const activities = loadCollection(
+    ACTIVITIES_KEY,
+    defaultActivities
+  );
+  const newActivity = {
+    id: Date.now(),
+    type: "Created",
+    color: "#f5a623",
+    title:
+      payload.subCategory || payload.category,
+    description:
+      `Added new asset (${payload.entityId})`,
+    user: "Admin",
+    createdAt: Date.now(),
+  };
+  saveCollection(
+    ACTIVITIES_KEY,
+    [newActivity, ...activities]
+  );
+  return { success: true };
+},
+async exportReport(category) {
+  alert("Export PDF: " + category);
+}
 };

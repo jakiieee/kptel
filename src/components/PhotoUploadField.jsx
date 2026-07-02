@@ -1,16 +1,3 @@
-/**
- * PhotoUploadField.jsx
- * ------------------------------------------------------------------
- * Input upload foto yang dipakai di semua form Add/Edit asset.
- * Mengonversi file gambar yang dipilih jadi data URL (base64) lalu
- * menyimpannya ke field `photo` pada formData, supaya nanti bisa
- * ditampilkan lagi lewat PhotoViewModal.
- *
- * TODO: BACKEND - saat backend siap, ganti konversi base64 ini dengan
- * upload file sungguhan (FormData) ke endpoint upload, lalu simpan URL
- * yang dikembalikan backend ke field `photo`.
- * ------------------------------------------------------------------
- */
 import { useRef } from "react";
 import { ImagePlus, X } from "lucide-react";
 

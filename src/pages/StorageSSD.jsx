@@ -1,7 +1,8 @@
-import { Plus, Eye, Pencil, Trash2, Database, ChevronDown } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Plus, Eye, Pencil, Trash2, Database, ChevronDown, ImagePlus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import "../styles/ssd.css";
-import "../styles/dashboard.css"; // dipakai oleh PhotoViewModal & ConfirmDeleteModal (dash-modal-*)
+import "../styles/dashboard.css"; 
+import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
@@ -10,18 +11,19 @@ import PhotoUploadField from "../components/PhotoUploadField";
 import { ssdAssetService, SSD_YEARS, SSD_STATUSES } from "../services/ssdAssetService";
 
 const yearFilters = ["All Years", ...SSD_YEARS];
-
 const emptyForm = {
   id: null,
   entityId: "",
+  year: "",
+  category: "Storage Management",
+  subCategory: "SSD",
   serialNumber: "",
   assignTo: "",
   dept: "",
   pcName: "",
   type: "",
-  status: "IN USE",
-  badge: "good",
-  year: String(new Date().getFullYear()),
+  capacity: "",
+  status: "NULL",
   photo: "",
 };
 
@@ -34,15 +36,14 @@ function badgeClass(badge) {
 export default function StorageSSD() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Years");
   const [showStatusDrop, setShowStatusDrop] = useState(false);
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const fileInputRef = useRef(null);
+  const [assetImage, setAssetImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [viewTarget, setViewTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -154,7 +155,7 @@ export default function StorageSSD() {
 
             <div className="ssd-summary-grid">
               {summary.map((item) => (
-                <div key={item.label} className="ssd-summary-card">
+                <div key={item.label} className="ssd-summary-card stagger-item">
                   <div className="ssd-summary-bar" style={{ background: item.color }} />
                   <p className="ssd-summary-label">{item.label}</p>
                   <p className="ssd-summary-value">{item.value} Unit</p>
@@ -189,14 +190,14 @@ export default function StorageSSD() {
                   </div>
                 )}
               </div>
-              <button className="btn-add" onClick={openAddModal}>
+              <button className="btn-add-dashboard" onClick={openAddModal}>
                 <Plus size={18} />
                 Add New Asset
               </button>
             </div>
           </div>
 
-          <section className="ssd-section">
+          <section className="ssd-section stagger-item">
             <h2 className="ssd-section-title">
               <Database size={22} />
               Master Table Data SSD
@@ -253,113 +254,214 @@ export default function StorageSSD() {
         <NotFoundState />
       )}
 
-      {/* MODAL: Add / Edit */}
       {showFormModal && (
-        <div className="ssd-modal-overlay" onClick={() => setShowFormModal(false)}>
-          <div className="ssd-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="ssd-modal-header">
-              <h2 className="ssd-modal-title">{formData.id ? "Edit Asset" : "Add New Asset"}</h2>
-              <button className="ssd-modal-close" onClick={() => setShowFormModal(false)}>
+        <div
+          className="dash-modal-overlay"
+          onClick={() => {
+            setShowFormModal(false);
+            setFormData(emptyForm);
+            setAssetImage(null);
+          }}
+        >
+          <div className="dash-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h2 className="dash-modal-title">Add New Asset</h2>
+              <button
+                className="dash-modal-close"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+              >
                 ×
               </button>
             </div>
 
-            <div className="ssd-modal-body">
-              <div className="ssd-form-row">
-                <div className="ssd-form-group">
+            <div className="dash-modal-body">
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Entity ID</label>
                   <input
-                    placeholder="e.g. SSD-SITE-23005"
+                    placeholder="..."
                     value={formData.entityId}
-                    onChange={(e) => handleFormChange("entityId", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("entityId", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="ssd-form-group">
+                <div className="dash-form-group">
+                  <label>Purchase Year</label>
+                  <input
+                    placeholder="..."
+                    value={formData.year}
+                    onChange={(e) =>
+                      handleFormChange("year", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Category</label>
+                  <input
+                    value={formData.category}
+                    readOnly
+                  />
+                </div>
+
+                <div className="dash-form-group">
                   <label>Serial Number</label>
                   <input
+                    placeholder="..."
                     value={formData.serialNumber}
-                    onChange={(e) => handleFormChange("serialNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("serialNumber", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Sub Category</label>
+                  <input
+                    value={formData.subCategory}
+                    readOnly
                   />
                 </div>
 
-                <div className="ssd-form-group">
+                <div className="dash-form-group">
                   <label>Assign To</label>
                   <input
+                    placeholder="..."
                     value={formData.assignTo}
-                    onChange={(e) => handleFormChange("assignTo", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("assignTo", e.target.value)
+                    }
                   />
                 </div>
+              </div>
 
-                <div className="ssd-form-group">
-                  <label>Dept</label>
-                  <input
-                    value={formData.dept}
-                    onChange={(e) => handleFormChange("dept", e.target.value)}
-                  />
-                </div>
-
-                <div className="ssd-form-group">
-                  <label>PC Name</label>
-                  <input
-                    value={formData.pcName}
-                    onChange={(e) => handleFormChange("pcName", e.target.value)}
-                  />
-                </div>
-
-                <div className="ssd-form-group">
-                  <label>Type & Capacity</label>
-                  <input
-                    placeholder="e.g. SSD 2.5 (250GB)"
-                    value={formData.type}
-                    onChange={(e) => handleFormChange("type", e.target.value)}
-                  />
-                </div>
-
-                <div className="ssd-form-group">
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Status</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => handleFormChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("status", e.target.value)
+                    }
                   >
-                    {SSD_STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.value}
-                      </option>
-                    ))}
+                    <option value="In Use">In Use</option>
+                    <option value="In Store">In Store</option>
+                    <option value="Broken">Broken</option>
+                    <option value="Null">Null</option>
                   </select>
                 </div>
 
-                <div className="ssd-form-group">
-                  <label>Year</label>
-                  <select
-                    value={formData.year}
-                    onChange={(e) => handleFormChange("year", e.target.value)}
-                  >
-                    {SSD_YEARS.map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
+                <div className="dash-form-group">
+                  <label>Department</label>
+                  <input
+                    placeholder="..."
+                    value={formData.dept}
+                    onChange={(e) =>
+                      handleFormChange("dept", e.target.value)
+                    }
+                  />
                 </div>
-
-                <PhotoUploadField
-                  value={formData.photo}
-                  onChange={(value) => handleFormChange("photo", value)}
-                />
               </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>PC Name</label>
+                  <input
+                    placeholder="..."
+                    value={formData.pcName}
+                    onChange={(e) =>
+                      handleFormChange("pcName", e.target.value)
+                    }
+                  />
+                </div>
+
+                <div className="dash-form-group">
+                  <label>Type</label>
+                  <input
+                    placeholder="..."
+                    value={formData.type}
+                    onChange={(e) =>
+                      handleFormChange("type", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full">
+                  <label>Capacity</label>
+                  <input
+                    placeholder="..."
+                    value={formData.capacity}
+                    onChange={(e) =>
+                      handleFormChange("capacity", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full photo-upload-field">
+                  <label>Photo</label>
+                  <label className="photo-upload-box">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setAssetImage(URL.createObjectURL(file));
+                      }}
+                    />
+                    {assetImage ? (
+                      <img
+                        src={assetImage}
+                        alt="Preview"
+                        className="photo-upload-preview"
+                      />
+                    ) : (
+                      <div className="photo-upload-placeholder">
+                        < ImagePlus size={22} />
+                        <span>Click to upload</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <div className="ssd-modal-footer">
+            <div className="dash-modal-footer">
               <button
-                className="ssd-btn-cancel"
-                onClick={() => setShowFormModal(false)}
+                className="dash-btn-cancel"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
                 disabled={isSaving}
               >
                 Cancel
               </button>
-              <button className="ssd-btn-save" onClick={saveAsset} disabled={isSaving}>
+              <button
+                className="dash-btn-save"
+                onClick={saveAsset}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
@@ -367,7 +469,6 @@ export default function StorageSSD() {
         </div>
       )}
 
-      {/* MODAL: View (Foto) */}
       <PhotoViewModal
         open={!!viewTarget}
         title="SSD Photo"
@@ -376,7 +477,6 @@ export default function StorageSSD() {
         onClose={() => setViewTarget(null)}
       />
 
-      {/* MODAL: Delete confirm */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Delete SSD Asset"

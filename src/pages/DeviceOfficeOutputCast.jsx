@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { Cast as CastIcon, Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Cast as CastIcon, Plus, Eye, Pencil, Trash2, ImagePlus } from "lucide-react";
 import "../styles/cast.css";
-import "../styles/dashboard.css"; // dipakai oleh PhotoViewModal & ConfirmDeleteModal (dash-modal-*)
+import "../styles/dashboard.css";
+import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
@@ -12,12 +13,12 @@ import { castAssetService, CAST_STATUSES } from "../services/castAssetService";
 const emptyForm = {
   id: null,
   entityId: "",
+  category: "Device Office Output",
+  subCategory: "Cast",
   serialNumber: "",
   assignTo: "",
   dept: "",
-  entity: "",
-  status: "IN STORE",
-  badge: "store",
+  status: "NULL",
   photo: "",
 };
 
@@ -31,11 +32,11 @@ export default function DeviceOfficeOutputCast() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const fileInputRef = useRef(null);
+  const [assetImage, setAssetImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [viewTarget, setViewTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -68,7 +69,7 @@ export default function DeviceOfficeOutputCast() {
   const inUse = filtered.filter((a) => a.status === "IN USE").length;
   const inStore = filtered.filter((a) => a.status === "IN STORE").length;
 
-  function openAdd() {
+  function openAddModal() {
     setFormData(emptyForm);
     setShowFormModal(true);
   }
@@ -145,31 +146,31 @@ export default function DeviceOfficeOutputCast() {
 
             <div className="cast-header-actions">
               <div className="cast-summary-grid">
-                <div className="cast-summary-card">
+                <div className="cast-summary-card stagger-item">
                   <div className="cast-summary-bar" style={{ background: "#f5a623" }} />
                   <p className="cast-summary-label">Total Stock</p>
                   <p className="cast-summary-value">{totalStock} Unit</p>
                 </div>
-                <div className="cast-summary-card">
+                <div className="cast-summary-card stagger-item">
                   <div className="cast-summary-bar" style={{ background: "#43a047" }} />
                   <p className="cast-summary-label">In Use</p>
                   <p className="cast-summary-value">{inUse} Unit</p>
                 </div>
-                <div className="cast-summary-card">
+                <div className="cast-summary-card stagger-item">
                   <div className="cast-summary-bar" style={{ background: "#1e88e5" }} />
                   <p className="cast-summary-label">In Store</p>
                   <p className="cast-summary-value">{inStore} Unit</p>
                 </div>
               </div>
 
-              <button className="btn-add" onClick={openAdd}>
+              <button className="btn-add-dashboard" onClick={openAddModal}>
                 <Plus size={18} />
                 Add New Asset
               </button>
             </div>
           </div>
 
-          <section className="cast-section">
+          <section className="cast-section stagger-item">
             <h2 className="cast-section-title">
               <CastIcon size={22} />
               Master Tabel Data Cast Device
@@ -225,85 +226,165 @@ export default function DeviceOfficeOutputCast() {
         <NotFoundState />
       )}
 
-      {/* ADD / EDIT MODAL */}
       {showFormModal && (
-        <div className="cast-modal-overlay" onClick={closeForm}>
-          <div className="cast-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="cast-modal-header">
-              <h2 className="cast-modal-title">{isEdit ? "Edit Asset" : "Add New Asset"}</h2>
-              <button className="cast-modal-close" onClick={closeForm}>
+        <div
+          className="dash-modal-overlay"
+          onClick={() => {
+            setShowFormModal(false);
+            setFormData(emptyForm);
+            setAssetImage(null);
+          }}
+        >
+          <div className="dash-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h2 className="dash-modal-title">Add New Asset</h2>
+              <button
+                className="dash-modal-close"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+              >
                 ×
               </button>
             </div>
 
-            <div className="cast-modal-body">
-              <div className="cast-form-row">
-                <div className="cast-form-group">
+            <div className="dash-modal-body">
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Entity ID</label>
                   <input
+                    placeholder="..."
                     value={formData.entityId}
-                    onChange={(e) => handleFormChange("entityId", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("entityId", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="cast-form-group">
+                <div className="dash-form-group">
                   <label>Serial Number</label>
                   <input
                     value={formData.serialNumber}
-                    onChange={(e) => handleFormChange("serialNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("serialNumber", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Category</label>
+                  <input
+                    value={formData.category}
+                    readOnly
                   />
                 </div>
 
-                <div className="cast-form-group">
+                <div className="dash-form-group">
                   <label>Assign To</label>
                   <input
+                    placeholder="..."
                     value={formData.assignTo}
-                    onChange={(e) => handleFormChange("assignTo", e.target.value)}
+                    onChange={(e)=>
+                      handleFormChange("assignTo", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Sub Category</label>
+                  <input
+                    value={formData.subCategory}
+                    readOnly
                   />
                 </div>
 
-                <div className="cast-form-group">
-                  <label>Dept</label>
+                <div className="dash-form-group">
+                  <label>Department</label>
                   <input
+                    placeholder="..."
                     value={formData.dept}
-                    onChange={(e) => handleFormChange("dept", e.target.value)}
+                    onChange={(e)=>
+                      handleFormChange("dept", e.target.value)
+                    }
                   />
                 </div>
+              </div>
 
-                <div className="cast-form-group">
-                  <label>Entity</label>
-                  <input
-                    value={formData.entity}
-                    onChange={(e) => handleFormChange("entity", e.target.value)}
-                  />
-                </div>
-
-                <div className="cast-form-group">
+              <div className="dash-form-row">
+                <div className="dash-form-group full">
                   <label>Status</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => handleFormChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("status", e.target.value)
+                    }
                   >
-                    {CAST_STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.value}
-                      </option>
-                    ))}
+                    <option value="In Use">In Use</option>
+                    <option value="In Store">In Store</option>
+                    <option value="Broken">Broken</option>
+                    <option value="Null">Null</option>
                   </select>
                 </div>
-
-                <PhotoUploadField
-                  value={formData.photo}
-                  onChange={(value) => handleFormChange("photo", value)}
-                />
               </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full photo-upload-field">
+                  <label>Photo</label>
+                  <label className="photo-upload-box">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setAssetImage(URL.createObjectURL(file));
+                      }}
+                    />
+                    {assetImage ? (
+                      <img
+                        src={assetImage}
+                        alt="Preview"
+                        className="photo-upload-preview"
+                      />
+                    ) : (
+                      <div className="photo-upload-placeholder">
+                        < ImagePlus size={22} />
+                        <span>Click to upload</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <div className="cast-modal-footer">
-              <button className="cast-btn-cancel" onClick={closeForm}>
+            <div className="dash-modal-footer">
+              <button
+                className="dash-btn-cancel"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+                disabled={isSaving}
+              >
                 Cancel
               </button>
-              <button className="cast-btn-save" onClick={handleSave} disabled={isSaving}>
+              <button
+                className="dash-btn-save"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
@@ -311,7 +392,6 @@ export default function DeviceOfficeOutputCast() {
         </div>
       )}
 
-      {/* VIEW MODAL (Foto) */}
       <PhotoViewModal
         open={!!viewTarget}
         title="Cast Device Photo"
@@ -320,7 +400,6 @@ export default function DeviceOfficeOutputCast() {
         onClose={() => setViewTarget(null)}
       />
 
-      {/* DELETE CONFIRM MODAL */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Delete Cast Device Asset"

@@ -1,17 +1,5 @@
 import { useAuth } from "../context/AuthContext";
 
-/**
- * PageHeader.jsx
- * ------------------------------------------------------------------
- * Header search + info user yang dipakai di semua halaman (Dashboard,
- * ListPC, Storage*, Hardware*, Network*, Peripherals*, Device*, dst).
- *
- * Nama & email diambil otomatis dari AuthContext (akun yang sedang
- * login), bukan lagi data statis. Prop `user` masih bisa dioverride
- * manual kalau suatu saat dibutuhkan, tapi secara default akan selalu
- * mengikuti akun yang login.
- * ------------------------------------------------------------------
- */
 export default function PageHeader({
   search,
   onSearchChange,

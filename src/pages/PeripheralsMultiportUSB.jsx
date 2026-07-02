@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { Usb, Plus, Eye, Pencil, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Usb, Plus, Eye, Pencil, Trash2, ImagePlus } from "lucide-react";
 import "../styles/multiport-usb.css";
-import "../styles/dashboard.css"; // dipakai oleh PhotoViewModal & ConfirmDeleteModal (dash-modal-*)
+import "../styles/dashboard.css"; 
+import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
@@ -19,8 +20,9 @@ const emptyForm = {
   assignTo: "",
   dept: "",
   entity: "",
-  status: "IN USE",
-  badge: "good",
+  status: "NULL",
+  category: "Peripherals & Accecories",
+  subCategory: "Multiport USB",
   photo: "",
 };
 
@@ -35,11 +37,11 @@ export default function PeripheralsMultiportUSB() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const fileInputRef = useRef(null);
+  const [assetImage, setAssetImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [viewTarget, setViewTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -67,12 +69,11 @@ export default function PeripheralsMultiportUSB() {
   );
   const hasResult = filtered.length > 0;
   const isEdit = Boolean(formData.id);
-
   const totalStock = filtered.length;
   const inUse = filtered.filter((a) => a.status === "IN USE").length;
   const inStore = filtered.filter((a) => a.status === "IN STORE").length;
 
-  function openAdd() {
+  function openAddModal() {
     setFormData(emptyForm);
     setShowFormModal(true);
   }
@@ -148,27 +149,27 @@ export default function PeripheralsMultiportUSB() {
             <h1 className="usb-title">Multiport USB</h1>
 
             <div className="usb-topbar-right">
-              <div className="usb-summary-card usb-summary-yellow">
+              <div className="usb-summary-card usb-summary-yellow stagger-item">
                 <span className="usb-summary-label">Total Stock</span>
                 <span className="usb-summary-value">{totalStock} Unit</span>
               </div>
-              <div className="usb-summary-card usb-summary-green">
+              <div className="usb-summary-card usb-summary-green stagger-item">
                 <span className="usb-summary-label">In Use</span>
                 <span className="usb-summary-value">{inUse} Unit</span>
               </div>
-              <div className="usb-summary-card usb-summary-blue">
+              <div className="usb-summary-card usb-summary-blue stagger-item">
                 <span className="usb-summary-label">In Store</span>
                 <span className="usb-summary-value">{inStore} Unit</span>
               </div>
 
-              <button className="btn-add" onClick={openAdd}>
+              <button className="btn-add-dashboard" onClick={openAddModal}>
                 <Plus size={18} />
                 Add New Asset
               </button>
             </div>
           </div>
 
-          <section className="usb-section">
+          <section className="usb-section stagger-item">
             <h2 className="usb-section-title">
               <Usb size={22} />
               Master Tabel Data Multiport USB
@@ -224,85 +225,166 @@ export default function PeripheralsMultiportUSB() {
         <NotFoundState />
       )}
 
-      {/* ADD / EDIT MODAL */}
       {showFormModal && (
-        <div className="usb-modal-overlay" onClick={closeForm}>
-          <div className="usb-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="usb-modal-header">
-              <h2 className="usb-modal-title">{isEdit ? "Edit Asset" : "Add New Asset"}</h2>
-              <button className="usb-modal-close" onClick={closeForm}>
+        <div
+          className="dash-modal-overlay"
+          onClick={() => {
+            setShowFormModal(false);
+            setFormData(emptyForm);
+            setAssetImage(null);
+          }}
+        >
+          <div className="dash-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h2 className="dash-modal-title">Add New Asset</h2>
+              <button
+                className="dash-modal-close"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+              >
                 ×
               </button>
             </div>
 
-            <div className="usb-modal-body">
-              <div className="usb-form-row">
-                <div className="usb-form-group">
+            <div className="dash-modal-body">
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Entity ID</label>
                   <input
+                    placeholder="..."
                     value={formData.entityId}
-                    onChange={(e) => handleFormChange("entityId", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("entityId", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="usb-form-group">
+                <div className="dash-form-group">
                   <label>Serial Number</label>
                   <input
+                    type="date"
                     value={formData.serialNumber}
-                    onChange={(e) => handleFormChange("serialNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("serialNumber", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Category</label>
+                  <input
+                    value={formData.category}
+                    readOnly 
                   />
                 </div>
 
-                <div className="usb-form-group">
+                <div className="dash-form-group">
+                  <label>Department</label>
+                  <input
+                    placeholder="..."
+                    value={formData.dept}
+                    onChange={(e)=>
+                      handleFormChange("dept", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Sub Category</label>
+                  <input
+                    value={formData.subCategory}
+                    readOnly 
+                  />
+                </div>
+
+                <div className="dash-form-group">
                   <label>Assign To</label>
                   <input
+                    placeholder="..."
                     value={formData.assignTo}
-                    onChange={(e) => handleFormChange("assignTo", e.target.value)}
+                    onChange={(e)=>
+                      handleFormChange("assignTo", e.target.value)
+                    }
                   />
                 </div>
+              </div>
 
-                <div className="usb-form-group">
-                  <label>Dept</label>
-                  <input
-                    value={formData.dept}
-                    onChange={(e) => handleFormChange("dept", e.target.value)}
-                  />
-                </div>
-
-                <div className="usb-form-group">
-                  <label>Entity</label>
-                  <input
-                    value={formData.entity}
-                    onChange={(e) => handleFormChange("entity", e.target.value)}
-                  />
-                </div>
-
-                <div className="usb-form-group">
+              <div className="dash-form-row">
+                <div className="dash-form-group full">
                   <label>Status</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => handleFormChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("status", e.target.value)
+                    }
                   >
-                    {MULTIPORTUSB_STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.value}
-                      </option>
-                    ))}
+                    <option value="In Use">In Use</option>
+                    <option value="In Store">In Store</option>
+                    <option value="Broken">Broken</option>
+                    <option value="Null">Null</option>
                   </select>
                 </div>
-
-                <PhotoUploadField
-                  value={formData.photo}
-                  onChange={(value) => handleFormChange("photo", value)}
-                />
               </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full photo-upload-field">
+                  <label>Photo</label>
+                  <label className="photo-upload-box">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setAssetImage(URL.createObjectURL(file));
+                      }}
+                    />
+                    {assetImage ? (
+                      <img
+                        src={assetImage}
+                        alt="Preview"
+                        className="photo-upload-preview"
+                      />
+                    ) : (
+                      <div className="photo-upload-placeholder">
+                        < ImagePlus size={22} />
+                        <span>Click to upload</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <div className="usb-modal-footer">
-              <button className="usb-btn-cancel" onClick={closeForm}>
+            <div className="dash-modal-footer">
+              <button
+                className="dash-btn-cancel"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+                disabled={isSaving}
+              >
                 Cancel
               </button>
-              <button className="usb-btn-save" onClick={handleSave} disabled={isSaving}>
+              <button
+                className="dash-btn-save"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
@@ -310,7 +392,6 @@ export default function PeripheralsMultiportUSB() {
         </div>
       )}
 
-      {/* VIEW MODAL (Foto) */}
       <PhotoViewModal
         open={!!viewTarget}
         title="Multiport USB Photo"
@@ -319,7 +400,6 @@ export default function PeripheralsMultiportUSB() {
         onClose={() => setViewTarget(null)}
       />
 
-      {/* DELETE CONFIRM MODAL */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Delete Multiport USB Asset"

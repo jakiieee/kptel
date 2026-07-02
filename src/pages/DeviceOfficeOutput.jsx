@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tablet as TabletIcon, Cast as CastIcon, Printer as PrinterIcon, BatteryCharging } from "lucide-react";
 import "../styles/deviceofficeoutput.css";
+import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
+import NotFoundState from "../components/NotFoundState";
 import { tabletAssetService } from "../services/tabletAssetService";
 import { castAssetService } from "../services/castAssetService";
 import { printerAssetService } from "../services/printerAssetService";
@@ -38,11 +40,77 @@ export default function DeviceOfficeOutput() {
   }, []);
 
   const categories = [
-    { key: "tablet", label: "Tablet", icon: TabletIcon, path: "/deviceofficeoutput/tablet" },
-    { key: "cast", label: "Cast Device", icon: CastIcon, path: "/deviceofficeoutput/cast" },
-    { key: "printer", label: "Printer", icon: PrinterIcon, path: "/deviceofficeoutput/printer" },
-    { key: "ups", label: "UPS", icon: BatteryCharging, path: "/deviceofficeoutput/ups" },
+    {
+      key: "tablet",
+      title: "Tablet",
+      total: `Total Stock: ${counts.tablet} Units`,
+      info1: `In Store: ${counts.tablet} Units`,
+      info2: "In Use: 0 Units",
+      color: "red",
+      icon: TabletIcon,
+      button: "Manage Tablet",
+      path: "/deviceofficeoutput/tablet",
+    },
+    {
+      key: "cast",
+      title: "Cast Device",
+      total: `Total Stock: ${counts.cast} Units`,
+      info1: `In Store: ${counts.cast} Units`,
+      info2: "In Use: 0 Units",
+      color: "yellow",
+      icon: CastIcon,
+      button: "Manage Cast Device",
+      path: "/deviceofficeoutput/cast",
+    },
+    {
+      key: "printer",
+      title: "Printer",
+      total: `Total Stock: ${counts.printer} Units`,
+      info1: `In Store: ${counts.printer} Units`,
+      info2: "In Use: 0 Units",
+      color: "green",
+      icon: PrinterIcon,
+      button: "Manage Printer",
+      path: "/deviceofficeoutput/printer",
+    },
+    {
+      key: "ups",
+      title: "UPS",
+      total: `Total Stock: ${counts.ups} Units`,
+      info1: `In Store: ${counts.ups} Units`,
+      info2: "In Use: 0 Units",
+      color: "blue",
+      icon: BatteryCharging,
+      button: "Manage UPS",
+      path: "/deviceofficeoutput/ups",
+    },
   ];
+
+  const keyword = search.toLowerCase();
+  const filteredCards = categories.filter((item) =>
+    item.title.toLowerCase().includes(keyword)
+  );
+
+  const deviceData = [
+    { label: "Tablet", percent: 80 },
+    { label: "Cast Device", percent: 60 },
+    { label: "Printer", percent: 70 },
+    { label: "UPS", percent: 90 },
+  ];
+
+  const filteredDevice = deviceData.filter((item) =>
+    item.label.toLowerCase().includes(keyword)
+  );
+
+  const hasResult =
+    filteredCards.length > 0 ||
+    filteredDevice.length > 0;
+
+  const getBarColor = (pct) => {
+    if (pct <= 30) return "#E53935";
+    if (pct <= 60) return "#FFD600";
+    return "#32CD32";
+  };
 
   return (
     <>
@@ -51,26 +119,73 @@ export default function DeviceOfficeOutput() {
         onSearchChange={setSearch}
         placeholder="Search Office Output Device..."
       />
-
+      {hasResult ? (
+        <>
       <h1 className="device-title">Device Office Output Overview</h1>
 
       <div className="device-overview-grid">
-        {categories.map((cat) => {
+        {filteredCards.map((cat) => {
           const Icon = cat.icon;
           return (
-            <div className="device-card stagger-item" key={cat.key}>
+            <div
+              className={`device-card ${cat.color} stagger-item`}
+              key={cat.key}
+            >
               <div className="device-card-header">
                 <Icon size={26} />
-                <h3>{cat.label}</h3>
+                <h3>{cat.title}</h3>
               </div>
-              <p>{counts[cat.key]} Asset Tercatat</p>
-              <button className="device-btn" onClick={() => navigate(cat.path)}>
-                Manage {cat.label}
+
+              <p>{cat.total}</p>
+              <p>{cat.info1}</p>
+              {cat.info2 && <p>{cat.info2}</p>}
+
+              <button
+                className="device-btn"
+                onClick={() => navigate(cat.path)}
+              >
+                {cat.button}
               </button>
             </div>
           );
         })}
       </div>
+      <section className="section stagger-item">
+        <h2 className="section-title">
+          Device & Office Output Stock Availability Percentage
+        </h2>
+
+        <div className="bar-list">
+          {filteredDevice.map((item) => (
+            <div className="bar-row" key={item.label}>
+              <p className="bar-label">{item.label}</p>
+
+              <div className="bar-track">
+                <div
+                  className="bar-fill"
+                  style={{
+                    width: `${item.percent}%`,
+                    background: getBarColor(item.percent),
+                  }}
+                />
+              </div>
+
+              <span
+                className="bar-pct"
+                style={{
+                  color: getBarColor(item.percent),
+                }}
+              >
+                {item.percent}%
+              </span>
+            </div>
+          ))}
+        </div>
+    </section>
+      </>
+    ) : (
+      <NotFoundState />
+    )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Router, Plus, Eye, Pencil, Trash2, ImagePlus } from "lucide-react";
-import "../styles/fortiswitch.css";
+import { Mouse as MouseIcon, Plus, Eye, Pencil, Trash2, ImagePlus } from "lucide-react";
+import "../styles/msw.css";
 import "../styles/dashboard.css"; 
 import "../styles/animations.css";
 import PageHeader from "../components/PageHeader";
@@ -8,33 +8,22 @@ import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 import PhotoViewModal from "../components/PhotoViewModal";
 import PhotoUploadField from "../components/PhotoUploadField";
-import {
-  fortiSwitchAssetService,
-  FORTISWITCH_MANUFACTURERS,
-  FORTISWITCH_STATUSES,
-} from "../services/fortiSwitchAssetService";
+import { mswAssetService, MSW_MANUFACTURERS } from "../services/mswAssetService";
 
 const emptyForm = {
   id: null,
   entityId: "",
-  category: "Network Infrastructure",
-  subCategory: "FortiSwitch",
   serialNumber: "",
   manufactur: "",
   location: "",
-  type: "",
-  status: "IN STORE",
-  size: "",
+  assignTo: "",
+  username: "",
+  category: "Peripherals & Accecories",
+  subCategory: "Mouse Wireless",
   photo: "",
 };
 
-function badgeClass(badge) {
-  if (badge === "good") return "badge-good";
-  if (badge === "broken") return "badge-broken";
-  return "badge-store";
-}
-
-export default function NetworkFortiSwitch() {
+export default function PeripheralsMSW() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -51,7 +40,7 @@ export default function NetworkFortiSwitch() {
     let isMounted = true;
     async function loadAssets() {
       setLoading(true);
-      const data = await fortiSwitchAssetService.list();
+      const data = await mswAssetService.list();
       if (isMounted) {
         setAssets(data);
         setLoading(false);
@@ -71,8 +60,8 @@ export default function NetworkFortiSwitch() {
   const hasResult = filtered.length > 0;
   const isEdit = Boolean(formData.id);
   const totalStock = filtered.length;
-  const inUse = filtered.filter((a) => a.status === "IN USE").length;
-  const inStore = filtered.filter((a) => a.status === "IN STORE").length;
+  const inUse = 0;
+  const inStore = totalStock;
 
   function openAddModal() {
     setFormData(emptyForm);
@@ -90,11 +79,6 @@ export default function NetworkFortiSwitch() {
   }
 
   function handleFormChange(field, value) {
-    if (field === "status") {
-      const statusInfo = FORTISWITCH_STATUSES.find((s) => s.value === value);
-      setFormData((prev) => ({ ...prev, status: value, badge: statusInfo?.badge || "store" }));
-      return;
-    }
     setFormData((prev) => ({ ...prev, [field]: value }));
   }
 
@@ -106,10 +90,10 @@ export default function NetworkFortiSwitch() {
     setIsSaving(true);
     try {
       if (isEdit) {
-        const updated = await fortiSwitchAssetService.update(formData.id, formData);
+        const updated = await mswAssetService.update(formData.id, formData);
         setAssets((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
       } else {
-        const created = await fortiSwitchAssetService.create(formData);
+        const created = await mswAssetService.create(formData);
         setAssets((prev) => [...prev, created]);
       }
       closeForm();
@@ -124,7 +108,7 @@ export default function NetworkFortiSwitch() {
     if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      await fortiSwitchAssetService.remove(deleteTarget.id);
+      await mswAssetService.remove(deleteTarget.id);
       setAssets((prev) => prev.filter((a) => a.id !== deleteTarget.id));
       setDeleteTarget(null);
     } catch (err) {
@@ -146,21 +130,23 @@ export default function NetworkFortiSwitch() {
         <p className="dash-loading-text">Loading assets...</p>
       ) : hasResult ? (
         <>
-          <div className="fts-topbar">
-            <h1 className="fts-title">FortiSwitch</h1>
+          <div className="msw-topbar">
+            <h1 className="msw-title">Mouse Wireless (MSW)</h1>
 
-            <div className="fts-topbar-right">
-              <div className="fts-summary-card fts-summary-purple stagger-item">
-                <span className="fts-summary-label">Total Stock</span>
-                <span className="fts-summary-value">{totalStock} Unit</span>
+            <div className="msw-topbar-right">
+              <div className="msw-summary-card msw-summary-yellow stagger-item">
+                  <span className="msw-summary-label">Total Stock</span>
+                  <span className="msw-summary-value">{totalStock} Unit</span>
               </div>
-              <div className="fts-summary-card fts-summary-green stagger-item">
-                <span className="fts-summary-label">In Use</span>
-                <span className="fts-summary-value">{inUse} Unit</span>
+
+              <div className="msw-summary-card msw-summary-green stagger-item">
+                  <span className="msw-summary-label">In Use</span>
+                  <span className="msw-summary-value">{inUse} Unit</span>
               </div>
-              <div className="fts-summary-card fts-summary-blue stagger-item">
-                <span className="fts-summary-label">In Store</span>
-                <span className="fts-summary-value">{inStore} Unit</span>
+
+              <div className="msw-summary-card msw-summary-blue stagger-item">
+                  <span className="msw-summary-label">In Store</span>
+                  <span className="msw-summary-value">{inStore} Unit</span>
               </div>
 
               <button className="btn-add-dashboard" onClick={openAddModal}>
@@ -170,14 +156,14 @@ export default function NetworkFortiSwitch() {
             </div>
           </div>
 
-          <section className="fts-section stagger-item">
-            <h2 className="fts-section-title">
-              <Router size={22} />
-              Master Tabel Data FortiSwitch
+          <section className="msw-section stagger-item">
+            <h2 className="msw-section-title">
+              <MouseIcon size={22} />
+              Master Tabel Data Mouse Wireless
             </h2>
 
-            <div className="fts-table-wrapper">
-              <table className="fts-table">
+            <div className="msw-table-wrapper">
+              <table className="msw-table">
                 <thead>
                   <tr>
                     <th>No</th>
@@ -185,8 +171,8 @@ export default function NetworkFortiSwitch() {
                     <th>Serial Number</th>
                     <th>Manufactur</th>
                     <th>Location</th>
-                    <th>Type</th>
-                    <th>Status</th>
+                    <th>Assign To</th>
+                    <th>Username</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -198,12 +184,10 @@ export default function NetworkFortiSwitch() {
                       <td>{a.serialNumber}</td>
                       <td>{a.manufactur}</td>
                       <td>{a.location}</td>
-                      <td>{a.type}</td>
+                      <td>{a.assignTo}</td>
+                      <td>{a.username}</td>
                       <td>
-                        <span className={badgeClass(a.badge)}>{a.status}</span>
-                      </td>
-                      <td>
-                        <div className="fts-action-group">
+                        <div className="msw-action-group">
                           <button className="btn-view" onClick={() => setViewTarget(a)}>
                             <Eye size={16} />
                           </button>
@@ -267,6 +251,7 @@ export default function NetworkFortiSwitch() {
                 <div className="dash-form-group">
                   <label>Serial Number</label>
                   <input
+                    type="date"
                     value={formData.serialNumber}
                     onChange={(e) =>
                       handleFormChange("serialNumber", e.target.value)
@@ -280,7 +265,7 @@ export default function NetworkFortiSwitch() {
                   <label>Category</label>
                   <input
                     value={formData.category}
-                    readOnly
+                    readOnly 
                   />
                 </div>
 
@@ -301,17 +286,17 @@ export default function NetworkFortiSwitch() {
                   <label>Sub Category</label>
                   <input
                     value={formData.subCategory}
-                    readOnly
+                    readOnly 
                   />
                 </div>
 
                 <div className="dash-form-group">
-                  <label>Manufacturer</label>
+                  <label>Location</label>
                   <input
                     placeholder="..."
-                    value={formData.manufacturer}
+                    value={formData.location}
                     onChange={(e)=>
-                      handleFormChange("manufacturer", e.target.value)
+                      handleFormChange("location", e.target.value)
                     }
                   />
                 </div>
@@ -319,40 +304,22 @@ export default function NetworkFortiSwitch() {
 
               <div className="dash-form-row">
                 <div className="dash-form-group">
-                  <label>Status</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) =>
-                      handleFormChange("status", e.target.value)
-                    }
-                  >
-                    <option value="In Use">In Use</option>
-                    <option value="In Store">In Store</option>
-                    <option value="Broken">Broken</option>
-                    <option value="Null">Null</option>
-                  </select>
-                </div>
-
-                <div className="dash-form-group">
-                  <label>Type</label>
+                  <label>Assign To</label>
                   <input
-                    placeholder="..."
-                    value={formData.type}
+                    value={formData.assignTo}
                     onChange={(e) =>
-                      handleFormChange("type", e.target.value)
+                      handleFormChange("assignTo", e.target.value)
                     }
                   />
                 </div>
-              </div>
 
-              <div className="dash-form-row">
-                <div className="dash-form-group full">
-                  <label>Size (GB)</label>
+                <div className="dash-form-group">
+                  <label>Username</label>
                   <input
                     placeholder="..."
-                    value={formData.size}
+                    value={formData.username}
                     onChange={(e) =>
-                      handleFormChange("size", e.target.value)
+                      handleFormChange("username", e.target.value)
                     }
                   />
                 </div>
@@ -418,7 +385,7 @@ export default function NetworkFortiSwitch() {
 
       <PhotoViewModal
         open={!!viewTarget}
-        title="FortiSwitch Photo"
+        title="Mouse Wireless Photo"
         photo={viewTarget?.photo}
         label={viewTarget?.entityId}
         onClose={() => setViewTarget(null)}
@@ -426,7 +393,7 @@ export default function NetworkFortiSwitch() {
 
       <ConfirmDeleteModal
         open={!!deleteTarget}
-        title="Delete FortiSwitch Asset"
+        title="Delete MSW Asset"
         description="Are you sure you want to delete asset"
         itemLabel={deleteTarget ? `${deleteTarget.entityId}?` : ""}
         onCancel={() => setDeleteTarget(null)}

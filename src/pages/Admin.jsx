@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "../styles/admin.css";
+import "../styles/animations.css";
 import {
   Pencil,
   AlertTriangle,
@@ -11,9 +12,6 @@ import {
 import { useAuth } from "../context/AuthContext";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 
-// ---------------------------------------------------------------------------
-// Mock data — replace with real API data when wiring this up
-// ---------------------------------------------------------------------------
 const INITIAL_PENDING_REQUESTS = [
   {
     id: 1,
@@ -115,8 +113,18 @@ export default function UserAccessManagement() {
   );
 
   function handleApprove(id) {
-    // TODO: BACKEND - panggil endpoint POST /admin/requests/:id/approve
-    setPendingRequests((prev) => prev.filter((req) => req.id !== id));
+    const approvedUser = pendingRequests.find((req) => req.id === id);
+    if (!approvedUser) return;
+    setUsers((prev) => [
+      ...prev,
+      {
+        ...approvedUser,
+        status: "GUEST",
+      },
+    ]);
+    setPendingRequests((prev) =>
+      prev.filter((req) => req.id !== id)
+    );
   }
 
   function handleReject(id) {
@@ -179,17 +187,12 @@ export default function UserAccessManagement() {
 
   return (
     <div className="uam-page">
-      {/* ----------------------------------------------------------- */}
-      {/* Header */}
-      {/* ----------------------------------------------------------- */}
+  
       <header className="uam-header">
         <h1 className="uam-title">User Access Management</h1>
       </header>
       <div className="uam-header-rule" />
 
-      {/* ----------------------------------------------------------- */}
-      {/* Profile + Summary cards */}
-      {/* ----------------------------------------------------------- */}
       <section className="uam-profile-row">
         <div className="uam-profile">
           <div className="uam-avatar">
@@ -203,33 +206,28 @@ export default function UserAccessManagement() {
             </svg>
           </div>
           <div className="uam-profile-info">
-            <p className="uam-profile-name">
-              {currentUser.name} <Pencil size={14} className="uam-edit-icon" />
-            </p>
+            <p className="uam-profile-name">{currentUser.name}</p>
             <p className="uam-profile-email">{currentUser.email}</p>
           </div>
         </div>
 
-        <div className="uam-stat-card uam-stat-card--admin">
+        <div className="uam-stat-card uam-stat-card--admin stagger-item">
           <p className="uam-stat-label">Total Admin</p>
           <p className="uam-stat-value">{totalAdmin} User</p>
         </div>
 
-        <div className="uam-stat-card uam-stat-card--pending">
+        <div className="uam-stat-card uam-stat-card--pending stagger-item">
           <p className="uam-stat-label">Pending Requests</p>
           <p className="uam-stat-value">{pendingCount} User</p>
         </div>
 
-        <div className="uam-stat-card uam-stat-card--registered">
+        <div className="uam-stat-card uam-stat-card--registered stagger-item">
           <p className="uam-stat-label">Total Registered Users</p>
           <p className="uam-stat-value">{totalRegistered} User</p>
         </div>
       </section>
 
-      {/* ----------------------------------------------------------- */}
-      {/* Pending Admin Request */}
-      {/* ----------------------------------------------------------- */}
-      <section className="uam-panel">
+      <section className="uam-panel stagger-item">
         <h2 className="uam-panel-title">
           <AlertTriangle size={20} className="uam-icon uam-icon--warning" />
           Pending Admin Request
@@ -288,10 +286,7 @@ export default function UserAccessManagement() {
         </div>
       </section>
 
-      {/* ----------------------------------------------------------- */}
-      {/* Full Data Admin & Users */}
-      {/* ----------------------------------------------------------- */}
-      <section className="uam-panel">
+      <section className="uam-panel stagger-item">
         <div className="uam-panel-header-row">
           <h2 className="uam-panel-title">
             <UserSquare2 size={20} className="uam-icon uam-icon--user" />
@@ -376,9 +371,6 @@ export default function UserAccessManagement() {
         </div>
       </section>
 
-      {/* ----------------------------------------------------------- */}
-      {/* Edit Users Credentials Modal */}
-      {/* ----------------------------------------------------------- */}
       {isModalOpen && (
         <div className="uam-modal-overlay" onClick={closeModal}>
           <div
@@ -481,9 +473,6 @@ export default function UserAccessManagement() {
         </div>
       )}
 
-      {/* ----------------------------------------------------------- */}
-      {/* Confirm Remove User Modal */}
-      {/* ----------------------------------------------------------- */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Remove User"

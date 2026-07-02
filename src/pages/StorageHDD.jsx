@@ -1,7 +1,8 @@
-import { HardDrive, Plus, Eye, Pencil, Trash2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { HardDrive, Plus, Eye, Pencil, Trash2, ImagePlus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import "../styles/hdd.css";
-import "../styles/dashboard.css"; // dipakai oleh PhotoViewModal & ConfirmDeleteModal (dash-modal-*)
+import "../styles/dashboard.css";
+import "../styles/animations.css"; 
 import PageHeader from "../components/PageHeader";
 import NotFoundState from "../components/NotFoundState";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
@@ -12,13 +13,14 @@ import { hddAssetService, HDD_STATUSES } from "../services/hddAssetService";
 const emptyForm = {
   id: null,
   entityId: "",
+  category: "Storage Management",
+  subCategory: "HDD/ NAS",
   serialNumber: "",
+  dept: "",
   type: "",
   capacity: "",
   location: "",
-  dept: "",
-  status: "IN USE",
-  badge: "good",
+  status: "NULL",
   photo: "",
 };
 
@@ -32,11 +34,11 @@ export default function StorageHDD() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState(emptyForm);
+  const fileInputRef = useRef(null);
+  const [assetImage, setAssetImage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
   const [viewTarget, setViewTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -144,7 +146,7 @@ export default function StorageHDD() {
 
             <div className="hdd-summary-grid">
               {summary.map((item) => (
-                <div key={item.label} className="hdd-summary-card">
+                <div key={item.label} className="hdd-summary-card stagger-item">
                   <div className="hdd-summary-bar" style={{ background: item.color }} />
                   <p className="hdd-summary-label">{item.label}</p>
                   <p className="hdd-summary-value">{item.value} Unit</p>
@@ -152,16 +154,15 @@ export default function StorageHDD() {
               ))}
             </div>
 
-            {/* Tombol Add dipindah keluar dari grid summary (sebelumnya salah ditaruh di dalam .hdd-summary-grid) */}
             <div className="hdd-header-actions">
-              <button className="btn-add" onClick={openAddModal}>
+              <button className="btn-add-dashboard" onClick={openAddModal}>
                 <Plus size={18} />
                 Add New Asset
               </button>
             </div>
           </div>
 
-          <section className="hdd-section">
+          <section className="hdd-section stagger-item">
             <h2 className="hdd-section-title">
               <HardDrive size={22} />
               Master Table Data HDD
@@ -218,100 +219,190 @@ export default function StorageHDD() {
         <NotFoundState />
       )}
 
-      {/* MODAL: Add / Edit */}
       {showFormModal && (
-        <div className="hdd-modal-overlay" onClick={() => setShowFormModal(false)}>
-          <div className="hdd-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="hdd-modal-header">
-              <h2 className="hdd-modal-title">{formData.id ? "Edit Asset" : "Add New Asset"}</h2>
-              <button className="hdd-modal-close" onClick={() => setShowFormModal(false)}>
+        <div
+          className="dash-modal-overlay"
+          onClick={() => {
+            setShowFormModal(false);
+            setFormData(emptyForm);
+            setAssetImage(null);
+          }}
+        >
+          <div className="dash-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="dash-modal-header">
+              <h2 className="dash-modal-title">Add New Asset</h2>
+              <button
+                className="dash-modal-close"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
+              >
                 ×
               </button>
             </div>
 
-            <div className="hdd-modal-body">
-              <div className="hdd-form-row">
-                <div className="hdd-form-group">
+            <div className="dash-modal-body">
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Entity ID</label>
                   <input
-                    placeholder="e.g. HDD-SITE-23004"
+                    placeholder="..."
                     value={formData.entityId}
-                    onChange={(e) => handleFormChange("entityId", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("entityId", e.target.value)
+                    }
                   />
                 </div>
 
-                <div className="hdd-form-group">
+                <div className="dash-form-group">
                   <label>Serial Number</label>
                   <input
+                    placeholder="..."
                     value={formData.serialNumber}
-                    onChange={(e) => handleFormChange("serialNumber", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("serialNumber", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Category</label>
+                  <input
+                    value={formData.category}
+                    readOnly
                   />
                 </div>
 
-                <div className="hdd-form-group">
+                <div className="dash-form-group">
+                  <label>Department</label>
+                  <input
+                    placeholder="..."
+                    value={formData.dept}
+                    onChange={(e) =>
+                      handleFormChange("dept", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group">
+                  <label>Sub Category</label>
+                  <input
+                    value={formData.subCategory}
+                    readOnly
+                  />
+                </div>
+
+                <div className="dash-form-group">
                   <label>Type</label>
                   <input
-                    placeholder="e.g. HDD/NAS"
+                    placeholder="..."
                     value={formData.type}
-                    onChange={(e) => handleFormChange("type", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("type", e.target.value)
+                    }
                   />
                 </div>
+              </div>
 
-                <div className="hdd-form-group">
-                  <label>Capacity</label>
-                  <input
-                    placeholder="e.g. 4 TB"
-                    value={formData.capacity}
-                    onChange={(e) => handleFormChange("capacity", e.target.value)}
-                  />
-                </div>
-
-                <div className="hdd-form-group">
-                  <label>Location</label>
-                  <input
-                    value={formData.location}
-                    onChange={(e) => handleFormChange("location", e.target.value)}
-                  />
-                </div>
-
-                <div className="hdd-form-group">
-                  <label>Dept</label>
-                  <input
-                    value={formData.dept}
-                    onChange={(e) => handleFormChange("dept", e.target.value)}
-                  />
-                </div>
-
-                <div className="hdd-form-group full">
+              <div className="dash-form-row">
+                <div className="dash-form-group">
                   <label>Status</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => handleFormChange("status", e.target.value)}
+                    onChange={(e) =>
+                      handleFormChange("status", e.target.value)
+                    }
                   >
-                    {HDD_STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.value}
-                      </option>
-                    ))}
+                    <option value="In Use">In Use</option>
+                    <option value="In Store">In Store</option>
+                    <option value="Broken">Broken</option>
+                    <option value="Null">Null</option>
                   </select>
                 </div>
 
-                <PhotoUploadField
-                  value={formData.photo}
-                  onChange={(value) => handleFormChange("photo", value)}
-                />
+                <div className="dash-form-group">
+                  <label>Capacity</label>
+                  <input
+                    placeholder="..."
+                    value={formData.capacity}
+                    onChange={(e) =>
+                      handleFormChange("capacity", e.target.value)
+                    }
+                  />
+                </div>
               </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full">
+                  <label>Location</label>
+                  <input
+                    placeholder="..."
+                    value={formData.location}
+                    onChange={(e) =>
+                      handleFormChange("location", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="dash-form-row">
+                <div className="dash-form-group full photo-upload-field">
+                  <label>Photo</label>
+                  <label className="photo-upload-box">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        setAssetImage(URL.createObjectURL(file));
+                      }}
+                    />
+                    {assetImage ? (
+                      <img
+                        src={assetImage}
+                        alt="Preview"
+                        className="photo-upload-preview"
+                      />
+                    ) : (
+                      <div className="photo-upload-placeholder">
+                        < ImagePlus size={22} />
+                        <span>Click to upload</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+
             </div>
 
-            <div className="hdd-modal-footer">
+            <div className="dash-modal-footer">
               <button
-                className="hdd-btn-cancel"
-                onClick={() => setShowFormModal(false)}
+                className="dash-btn-cancel"
+                onClick={() => {
+                  setShowFormModal(false);
+                  setFormData(emptyForm);
+                  setAssetImage(null);
+                }}
                 disabled={isSaving}
               >
                 Cancel
               </button>
-              <button className="hdd-btn-save" onClick={saveAsset} disabled={isSaving}>
+              <button
+                className="dash-btn-save"
+                onClick={saveAsset}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save"}
               </button>
             </div>
@@ -319,7 +410,6 @@ export default function StorageHDD() {
         </div>
       )}
 
-      {/* MODAL: View (Foto) */}
       <PhotoViewModal
         open={!!viewTarget}
         title="HDD Photo"
@@ -328,7 +418,6 @@ export default function StorageHDD() {
         onClose={() => setViewTarget(null)}
       />
 
-      {/* MODAL: Delete confirm */}
       <ConfirmDeleteModal
         open={!!deleteTarget}
         title="Delete HDD Asset"

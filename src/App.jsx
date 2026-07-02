@@ -21,12 +21,12 @@ import PeripheralsWebcam from "./pages/PeripheralsWebcam";
 import PeripheralsHeadphone from "./pages/PeripheralsHeadphone";
 import PeripheralsMultiportUSB from "./pages/PeripheralsMultiportUSB";
 import PeripheralsHDMIPort from "./pages/PeripheralsHDMIPort";
+import PeripheralsMSW from "./pages/PeripheralsMSW";
+import PeripheralsMouse from "./pages/PeripheralsMouse";
 import Network from "./pages/Network";
 import NetworkDongleWIFI from "./pages/NetworkDongleWIFI";
 import NetworkPort from "./pages/NetworkPort";
 import NetworkFortiSwitch from "./pages/NetworkFortiSwitch";
-import NetworkMSW from "./pages/NetworkMSW";
-import NetworkMouse from "./pages/NetworkMouse";
 import DeviceOfficeOutput from "./pages/DeviceOfficeOutput";
 import DeviceOfficeOutputTablet from "./pages/DeviceOfficeOutputTablet";
 import DeviceOfficeOutputCast from "./pages/DeviceOfficeOutputCast";
@@ -41,12 +41,10 @@ export default function App() {
     <AuthProvider>
     <BrowserRouter>
       <Routes>
-        {/* Auth */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot" element={<ForgotPassword />} />
 
-        {/* Main App */}
         <Route
           element={
             <ProtectedRoute>
@@ -123,6 +121,14 @@ export default function App() {
             element={<PeripheralsHDMIPort />}
           />
           <Route
+            path="/peripherals/msw"
+            element={<PeripheralsMSW />}
+          />
+          <Route
+            path="/peripherals/mouse"
+            element={<PeripheralsMouse />}
+          />
+          <Route
             path="/network"
             element={<Network />}
           />
@@ -137,14 +143,6 @@ export default function App() {
           <Route
             path="/network/fortiswitch"
             element={<NetworkFortiSwitch />}
-          />
-          <Route
-            path="/network/msw"
-            element={<NetworkMSW />}
-          />
-          <Route
-            path="/network/mouse"
-            element={<NetworkMouse />}
           />
           <Route
             path="/deviceofficeoutput"
